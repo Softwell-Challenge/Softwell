@@ -43,8 +43,8 @@ fun CustomDropdown(
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp, vertical = 2.dp),
             colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
-                textColor = colorResource(id = R.color.primary),
-                containerColor = colorResource(id = R.color.bg_dark),
+                //textColor = colorResource(id = R.color.primary),
+                //containerColor = colorResource(id = R.color.bg_dark),
                 focusedBorderColor = Color.Transparent,
                 unfocusedBorderColor = Color.Transparent
             ),

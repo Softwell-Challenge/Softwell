@@ -47,10 +47,7 @@ fun DashboardCard(
             .fillMaxWidth()
             .padding(vertical = 6.dp, horizontal = 8.dp)
             .shadow(elevation, RoundedCornerShape(12.dp))
-            .clickable(
-                interactionSource = interactionSource,
-                indication = rememberRipple(color = rippleColor)
-            ) {
+            .clickable {
                 navController.navigate(destination)
             },
         shape = RoundedCornerShape(12.dp),
