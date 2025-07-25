@@ -1,4 +1,4 @@
-package br.com.fiap.softwell.dao
+package br.com.fiap.softwell.database.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
@@ -9,8 +9,8 @@ import br.com.fiap.softwell.model.UserMood
 interface UserMoodDao {
 
     @Insert
-    suspend fun insert(userMood: UserMood)
+     fun insert(userMood: UserMood): Long
 
     @Query("SELECT * FROM user_mood ORDER BY timestamp ASC")
-    suspend fun getAll(): List<UserMood>
+    fun getAll(): List<UserMood>
 }

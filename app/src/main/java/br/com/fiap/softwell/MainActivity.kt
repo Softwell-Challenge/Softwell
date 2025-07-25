@@ -17,6 +17,7 @@ import br.com.fiap.softwell.screens.SupportScreen
 import br.com.fiap.softwell.ui.theme.SoftwellTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
 import br.com.fiap.softwell.model.ThemeViewModel
+import br.com.fiap.softwell.screens.GraphicScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,7 +34,7 @@ class MainActivity : ComponentActivity() {
                         composable(route = "dashboard") { DashboardScreen(navController, themeViewModel) }
                         composable(route = "psychosocial") { PsychosocialScreen(navController) }
                         composable(route = "support") { SupportScreen(navController) }
-                        //composable(route = "graphic") { GraphicScreen(navController) }
+                        composable(route = "graphic") { GraphicScreen(navController) }
                     }
                 }
             }

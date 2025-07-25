@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "user_mood")
 data class UserMood(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val moodId: String,
     val emoji: String,
     val timestamp: Long // salva a data/hora que foi preenchido

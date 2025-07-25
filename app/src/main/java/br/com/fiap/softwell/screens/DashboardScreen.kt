@@ -47,7 +47,8 @@ import br.com.fiap.softwell.components.DashboardCard
 import br.com.fiap.softwell.components.DiamondLine
 import br.com.fiap.softwell.components.MoodButton
 import br.com.fiap.softwell.components.SessionTitle
-import br.com.fiap.softwell.dao.AppDatabase
+import br.com.fiap.softwell.database.dao.AppDatabase
+import br.com.fiap.softwell.database.repository.UserMoodRepository
 import br.com.fiap.softwell.model.MoodOption
 import br.com.fiap.softwell.model.ThemeViewModel
 import br.com.fiap.softwell.model.UserMood
@@ -61,6 +62,7 @@ fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel
     val scrollState = rememberScrollState()
 
     val context = LocalContext.current
+    val moodOptionRepository = UserMoodRepository(context)
     val db = remember { AppDatabase.getDatabase(context) }
     val userMoodDao = db.userMoodDao()
 
@@ -79,7 +81,8 @@ fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel
         colors = listOf(
             colorResource(id = R.color.bg_dark),
             colorResource(id = R.color.bg_middle),
-            colorResource(id = R.color.bg_light)),
+            colorResource(id = R.color.bg_light)
+        ),
         start = Offset(0f, 0f),
         end = Offset(1000f, 1000f)
     )
@@ -132,7 +135,8 @@ fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel
                     modifier = Modifier
                         .padding(top = 8.dp)
                         .fillMaxWidth()
-                        .wrapContentWidth(Alignment.CenterHorizontally))
+                        .wrapContentWidth(Alignment.CenterHorizontally)
+                )
                 Text(
                     text = "Como você está se sentindo hoje?",
                     modifier = Modifier.padding(8.dp),
@@ -205,20 +209,29 @@ fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel
                 }
                 Button(
                     onClick = {
-                        val moodId = selectedMoodId.value
-                        val emoji = selectedEmoji.value
+                        val mooduser = UserMood(
+                            id = 0,
+                            selectedMoodId.value!!,
+                            selectedEmoji.value!!,
+                            System.currentTimeMillis()
+                        )
 
-                        if (moodId != null && emoji != null) {
-                            val userMood = UserMood(
-                                moodId = moodId,
-                                emoji = emoji,
-                                timestamp = System.currentTimeMillis()
-                            )
+                        moodOptionRepository.salvar(mooduser)
 
-                            CoroutineScope(Dispatchers.IO).launch {
-                                userMoodDao.insert(userMood)
-                            }
-                        }
+//                        val moodId = selectedMoodId.value
+//                        val emoji = selectedEmoji.value
+//
+//                        if (moodId != null && emoji != null) {
+//                            val userMood = UserMood(
+//                                moodId = moodId,
+//                                emoji = emoji,
+//                                timestamp = System.currentTimeMillis()
+//                            )
+//
+//                            CoroutineScope(Dispatchers.IO).launch {
+//                                userMoodDao.insert(userMood)
+//                            }
+//                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()

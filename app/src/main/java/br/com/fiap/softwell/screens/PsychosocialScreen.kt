@@ -33,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -45,6 +46,9 @@ import br.com.fiap.softwell.components.NumberRatingBar
 import br.com.fiap.softwell.components.Question
 import br.com.fiap.softwell.components.RatingSlider
 import br.com.fiap.softwell.components.SessionTitle
+import br.com.fiap.softwell.database.dao.AppDatabase
+import br.com.fiap.softwell.database.repository.PsychoSocialRepository
+import br.com.fiap.softwell.model.PsychoSocial
 import br.com.fiap.softwell.model.UserMood
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -53,6 +57,10 @@ import kotlinx.coroutines.launch
 @Composable
 fun PsychosocialScreen(navController: NavController) {
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
+    val psychoSocialRepository = PsychoSocialRepository(context)
+    val db = remember { AppDatabase.getDatabase(context) }
+    val psychoSocialDao = db.psychoSocialDao()
 
     val diagonalGradient = Brush.linearGradient(
         colors = listOf(
@@ -275,7 +283,33 @@ fun PsychosocialScreen(navController: NavController) {
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
                 Button(
-                    onClick = {},
+                    onClick = {
+                        val psychosocial = PsychoSocial(
+                            id = 0,
+                            workloadAssessment,
+                            qualityOfLifeImpact,
+                            extraHours,
+                            warningSigns,
+                            mentalHealthImpact,
+                            bossRating,
+                            coworkerRating,
+                            coworkerRespect,
+                            teamRelationship,
+                            freedomSpeech,
+                            welcomedPart,
+                            cooperationSpirit,
+                            taskClarity,
+                            openCommunication,
+                            infoFlow,
+                            goalClarity,
+                            leaderCaresWellbeing,
+                            comfortableReportingIssues,
+                            leaderRecognizesEfforts,
+                            trustAndTransparency
+                        )
+                        psychoSocialRepository.salvar(psychosocial)
+
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp)
