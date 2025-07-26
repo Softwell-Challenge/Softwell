@@ -29,6 +29,9 @@ room = "2.6.1" # Por exemplo, usando a versão 2.6.1
 material = "1.12.0"
 uiGraphics = "1.8.3"
 
+# MPAndroidChart
+mpAndroidChart = "3.1.0"
+
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -67,6 +70,9 @@ room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 # Material Design
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics", version.ref = "uiGraphics" }
+
+# MpAndroidChart
+mpAndroidChart = { module = "com.github.PhilJay:MPAndroidChart", version.ref = "mpAndroidChart" }
 
 
 [plugins]

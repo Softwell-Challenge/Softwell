@@ -80,4 +80,7 @@ dependencies {
     // Dependencia de Alerta (Material Design)
     implementation(libs.material)
 
+    // Dependência do MPAndroidChart
+    implementation(libs.mpAndroidChart)
+
 }
