@@ -39,7 +39,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import br.com.fiap.softwell.R
 import br.com.fiap.softwell.database.dao.AppDatabase
+import br.com.fiap.softwell.database.repository.PsychoSocialRepository
 import br.com.fiap.softwell.database.repository.UserMoodRepository
+import br.com.fiap.softwell.model.PsychoSocial
 import br.com.fiap.softwell.model.UserMood
 
 @Composable
@@ -50,7 +52,11 @@ fun GraphicScreen(navController: NavController) {
     val moodOptionRepository = UserMoodRepository(context)
     val db = remember { AppDatabase.getDatabase(context) }
     val userMoodDao = db.userMoodDao()
+    val psychoRepository = PsychoSocialRepository(context)
 
+    val listarPsyco = remember {
+        mutableStateOf(psychoRepository.listPsychoSocial())
+    }
     val listarMood = remember {
         mutableStateOf(moodOptionRepository.listUserMood())
     }
@@ -92,6 +98,7 @@ fun GraphicScreen(navController: NavController) {
                 }
             }
             moodList(listarMood)
+            psychoList(listarPsyco)
         }
 
 
@@ -108,6 +115,22 @@ fun moodList(listarMood: MutableState<List<UserMood>>) {
         ){
         for (mood in listarMood.value){
             cardMood(mood)
+            Spacer(modifier = Modifier.height(4.dp))
+        }
+
+    }
+}
+
+@Composable
+fun psychoList(listarPsyco: MutableState<List<PsychoSocial>>) {
+    Column (
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState())
+    ){
+        for (psycho in listarPsyco.value){
+            cardPsycho(psycho)
             Spacer(modifier = Modifier.height(4.dp))
         }
 
@@ -137,6 +160,42 @@ fun cardMood(mood: UserMood) {
                 )
                 Text(
                     text = mood.emoji,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
+                )
+//                Text(
+//                    text = mood.timestamp,
+//                    fontSize = 24.sp,
+//                    fontWeight = FontWeight.Bold
+//                )
+
+            }
+        }
+    }
+}
+@Composable
+fun cardPsycho(psycho: PsychoSocial){
+    Card (
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.LightGray
+        )
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ){
+            Column (
+                modifier = Modifier
+                    .padding(8.dp)
+                    .weight(2f)
+            ){
+                Text(
+                    text = psycho.workloadAssessment,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = psycho.qualityOfLifeImpact,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
                 )

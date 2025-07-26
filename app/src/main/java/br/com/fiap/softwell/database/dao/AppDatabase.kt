@@ -5,12 +5,15 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import br.com.fiap.softwell.model.PsychoSocial
+import br.com.fiap.softwell.model.Support
 import br.com.fiap.softwell.model.UserMood
 
-@Database(entities = [UserMood::class, PsychoSocial::class], version = 2)
+@Database(entities = [UserMood::class, PsychoSocial::class, Support::class], version = 3)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userMoodDao(): UserMoodDao
     abstract fun psychoSocialDao(): PsychoSocialDao
+
+    abstract fun supportDao(): SupportDao
     companion object {
         //@Volatile private var INSTANCE: AppDatabase? = null
         private lateinit var instance: AppDatabase

@@ -35,6 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -45,9 +46,13 @@ import br.com.fiap.softwell.R
 import br.com.fiap.softwell.components.DiamondLine
 import br.com.fiap.softwell.components.ExpandableTipCard
 import br.com.fiap.softwell.components.SessionTitle
+import br.com.fiap.softwell.database.dao.AppDatabase
+import br.com.fiap.softwell.database.repository.SupportRepository
+import br.com.fiap.softwell.model.Support
 import br.com.fiap.softwell.model.Tip
 import br.com.fiap.softwell.model.TipsData
 import br.com.fiap.softwell.ui.theme.Sora
+import java.sql.Date
 
 enum class SupportScreenType {
     Care,
@@ -58,6 +63,9 @@ enum class SupportScreenType {
 fun SupportScreen(navController: NavController) {
     val selectedScreen = remember { mutableStateOf(SupportScreenType.Care) }
 
+    val context = LocalContext.current
+    val supportRepository = SupportRepository(context)
+    val db = remember { AppDatabase.getDatabase(context) }
     val scrollState = rememberScrollState()
 
     val diagonalGradient = Brush.linearGradient(
@@ -194,7 +202,12 @@ fun SupportScreen(navController: NavController) {
                     }
                     Button(
                         onClick = {
-
+                            val support = Support(
+                                id = 0,
+                                selectedOption.value.toString(),
+                                System.currentTimeMillis()
+                            )
+                            supportRepository.salvar(support)
                         },
                         modifier = Modifier
                             .padding(8.dp)
