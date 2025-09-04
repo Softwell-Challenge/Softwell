@@ -50,15 +50,17 @@ import br.com.fiap.softwell.components.SessionTitle
 import br.com.fiap.softwell.database.dao.AppDatabase
 import br.com.fiap.softwell.database.repository.UserMoodRepository
 import br.com.fiap.softwell.model.MoodOption
+import br.com.fiap.softwell.model.MoodViewModel
 import br.com.fiap.softwell.model.ThemeViewModel
 import br.com.fiap.softwell.model.UserMood
 import br.com.fiap.softwell.ui.theme.Sora
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+
 
 @Composable
-fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel) {
+fun DashboardScreen(navController: NavController,
+                    themeViewModel: ThemeViewModel,
+                    moodViewModel: MoodViewModel) {
+
     val scrollState = rememberScrollState()
 
     val context = LocalContext.current
@@ -209,29 +211,16 @@ fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel
                 }
                 Button(
                     onClick = {
+                        // Room
                         val mooduser = UserMood(
                             id = 0,
                             selectedMoodId.value!!,
                             selectedEmoji.value!!,
                             System.currentTimeMillis()
                         )
-
                         moodOptionRepository.salvar(mooduser)
-
-//                        val moodId = selectedMoodId.value
-//                        val emoji = selectedEmoji.value
-//
-//                        if (moodId != null && emoji != null) {
-//                            val userMood = UserMood(
-//                                moodId = moodId,
-//                                emoji = emoji,
-//                                timestamp = System.currentTimeMillis()
-//                            )
-//
-//                            CoroutineScope(Dispatchers.IO).launch {
-//                                userMoodDao.insert(userMood)
-//                            }
-//                        }
+                        // API
+                        moodViewModel.fetchAllMoods()
                     },
                     modifier = Modifier
                         .fillMaxWidth()
