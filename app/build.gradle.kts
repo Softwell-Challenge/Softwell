@@ -83,4 +83,9 @@ dependencies {
     // Dependência do MPAndroidChart
     implementation(libs.mpAndroidChart)
 
+    // Dependencia Moshi
+    implementation(libs.converter.moshi)
+    implementation(libs.moshi)
+    kapt(libs.moshi.kotlin.codegen)
+
 }
