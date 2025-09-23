@@ -10,12 +10,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import br.com.fiap.softwell.screens.DashboardScreen
-//import br.com.fiap.softwell.screens.GraphicScreen
 import br.com.fiap.softwell.screens.LoginScreen
 import br.com.fiap.softwell.screens.PsychosocialScreen
 import br.com.fiap.softwell.screens.SupportScreen
 import br.com.fiap.softwell.ui.theme.SoftwellTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
+import br.com.fiap.softwell.model.MoodViewModel
 import br.com.fiap.softwell.model.ThemeViewModel
 import br.com.fiap.softwell.screens.GraphicScreen
 
@@ -29,12 +29,13 @@ class MainActivity : ComponentActivity() {
             SoftwellTheme(darkTheme = themeViewModel.isDarkTheme.value) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     val navController = rememberNavController()
+                    val moodViewModel: MoodViewModel = viewModel()
                     NavHost(navController = navController, startDestination = "login") {
                         composable(route = "login") { LoginScreen(navController) }
-                        composable(route = "dashboard") { DashboardScreen(navController, themeViewModel) }
+                        composable(route = "dashboard") { DashboardScreen(navController, themeViewModel,moodViewModel) }
                         composable(route = "psychosocial") { PsychosocialScreen(navController) }
                         composable(route = "support") { SupportScreen(navController) }
-                        composable(route = "graphic") { GraphicScreen(navController) }
+                        composable(route = "graphic") { GraphicScreen(navController,moodViewModel) }
                     }
                 }
             }
