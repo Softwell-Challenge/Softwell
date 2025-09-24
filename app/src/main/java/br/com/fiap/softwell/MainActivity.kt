@@ -32,7 +32,7 @@ class MainActivity : ComponentActivity() {
                     val moodViewModel: MoodViewModel = viewModel()
                     NavHost(navController = navController, startDestination = "login") {
                         composable(route = "login") { LoginScreen(navController) }
-                        composable(route = "dashboard") { DashboardScreen(navController, themeViewModel,moodViewModel) }
+                        composable(route = "dashboard") { DashboardScreen(navController, themeViewModel) }
                         composable(route = "psychosocial") { PsychosocialScreen(navController) }
                         composable(route = "support") { SupportScreen(navController) }
                         composable(route = "graphic") { GraphicScreen(navController,moodViewModel) }

@@ -12,7 +12,7 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 
 sealed class HumorDataState {
     object Loading : HumorDataState()
-    data class Success(val data: HumorData) : HumorDataState()
+    data class Success(val data: List<HumorData>) : HumorDataState()
     data class Error(val message: String) : HumorDataState()
 }
 
@@ -32,10 +32,44 @@ class HumorViewModel : ViewModel() {
         viewModelScope.launch {
             _humorDataState.value = HumorDataState.Loading
             try {
-                val data = apiService.getHumorData()
-                _humorDataState.value = HumorDataState.Success(data)
+                // Chama a API e espera por uma lista de objetos
+                val response = apiService.getHumorData()
+                if (response.isSuccessful) {
+                    val dataList = response.body()
+                    if (!dataList.isNullOrEmpty()) {
+                        // Envia a lista inteira para o estado de sucesso
+                        _humorDataState.value = HumorDataState.Success(dataList)
+                    } else {
+                        _humorDataState.value = HumorDataState.Error("Lista de dados vazia")
+                    }
+                } else {
+                    _humorDataState.value = HumorDataState.Error("Erro na requisição: ${response.code()}")
+                }
             } catch (e: Exception) {
                 _humorDataState.value = HumorDataState.Error(e.message ?: "Erro desconhecido")
+            }
+        }
+    }
+
+    fun saveUserResponse(estadoDeHumor: String, emoji: String) {
+        viewModelScope.launch {
+            try {
+                // Cria um objeto HumorData com a resposta do usuário
+                val userResponse = HumorData(estadoDeHumor, emoji)
+
+                // Envia a requisição POST para o backend
+                val response = apiService.saveHumorData(userResponse)
+
+                if (response.isSuccessful) {
+                    // Log de sucesso
+                    println("Resposta do usuário salva com sucesso!")
+                } else {
+                    // Log de erro
+                    println("Erro ao salvar resposta: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                // Log de exceção
+                println("Exceção ao salvar resposta: ${e.message}")
             }
         }
     }
