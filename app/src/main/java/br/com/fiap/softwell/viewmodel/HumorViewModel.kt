@@ -70,7 +70,21 @@ class HumorViewModel : ViewModel() {
         }
     }
 
-    fun addHumor(estadoDeHumor: String, emoji: String) {
+    fun addHumor(
+        estadoDeHumor: String,
+        emoji: String,
+        // NOVO CALLBACK: para notificar a UI se o limite for atingido
+        onLimitReached: () -> Unit
+    ) {
+        // 1. Tenta obter a lista atual de humores do estado de sucesso
+        val currentHumors = (_humorDataState.value as? HumorDataState.Success)?.data ?: emptyList()
+
+        // 2. VERIFICAÇÃO DA LÓGICA DE LIMITE (9 humores)
+        if (currentHumors.size >= 9) {
+            onLimitReached() // Chama o callback para mostrar a mensagem na tela
+            return // Para a execução, impedindo a chamada da API
+        }
+
         viewModelScope.launch {
             try {
                 val newHumor = HumorData(estadoDeHumor, emoji)
@@ -78,7 +92,7 @@ class HumorViewModel : ViewModel() {
 
                 if (response.isSuccessful) {
                     println("Novo humor adicionado com sucesso!")
-                    // Opcional: recarregar a lista para exibir o novo item
+                    // Recarregar a lista para exibir o novo item
                     fetchHumorData()
                 } else {
                     println("Erro ao adicionar humor: ${response.code()}")

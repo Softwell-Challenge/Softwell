@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -31,6 +30,10 @@ fun HumorPopup(
     var selectedEmoji by remember { mutableStateOf<String?>(null) }
     val scrollState = rememberScrollState()
 
+    // LÓGICA DE LIMITAÇÃO: Pega no máximo 9 humores e divide em grupos de 3 (linhas)
+    val limitedHumors = humorDataList.take(9)
+    val humorRows = limitedHumors.chunked(3)
+
     Dialog(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
@@ -54,41 +57,40 @@ fun HumorPopup(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
+                    // REMOVEMOS O PADDING HORIZONTAL DAQUI, pois a Row interna irá gerenciar
+                    .padding(horizontal = 0.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    humorDataList.take(3).forEach { humor ->
-                        MoodButton(
-                            moodText = humor.estadoDeHumor,
-                            emoji = humor.emoji,
-                            isSelected = selectedMoodText == humor.estadoDeHumor,
-                            onClick = {
-                                selectedMoodText = humor.estadoDeHumor
-                                selectedEmoji = humor.emoji
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    humorDataList.drop(3).forEach { humor ->
-                        MoodButton(
-                            moodText = humor.estadoDeHumor,
-                            emoji = humor.emoji,
-                            isSelected = selectedMoodText == humor.estadoDeHumor,
-                            onClick = {
-                                selectedMoodText = humor.estadoDeHumor
-                                selectedEmoji = humor.emoji
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
+                // Itera sobre os grupos de 3 humores (as linhas)
+                humorRows.forEach { rowOfHumors ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            // ADICIONAMOS PADDING HORIZONTAL AQUI para afastar das bordas do popup
+                            .padding(horizontal = 8.dp),
+                        // AQUI: Usamos SpacedBy para criar a margem entre os botões (8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Itera sobre os humores dentro de cada linha (as colunas)
+                        rowOfHumors.forEach { humor ->
+                            MoodButton(
+                                moodText = humor.estadoDeHumor,
+                                emoji = humor.emoji,
+                                isSelected = selectedMoodText == humor.estadoDeHumor,
+                                onClick = {
+                                    selectedMoodText = humor.estadoDeHumor
+                                    selectedEmoji = humor.emoji
+                                },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+
+                        // Preenche o espaço vazio se a última linha tiver menos de 3 itens
+                        if (rowOfHumors.size < 3) {
+                            repeat(3 - rowOfHumors.size) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
                     }
                 }
             }
@@ -102,7 +104,8 @@ fun HumorPopup(
                         onSend(selectedMoodText!!, selectedEmoji!!)
                     }
                 },
-                modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                enabled = selectedMoodText != null
             ) {
                 Text("ENVIAR")
             }
@@ -121,15 +124,15 @@ fun MoodButton(
     Column(
         modifier = modifier
             .background(
-                color = if (isSelected) Color.LightGray.copy(alpha = 0.5f) else Color.Transparent,
+                color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant,
                 shape = RoundedCornerShape(16.dp)
             )
             .clickable(onClick = onClick)
-            .padding(12.dp),
+            .padding(vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Text(text = emoji, fontSize = 32.sp)
-        Text(text = moodText, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
+        Text(text = moodText, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface, maxLines = 1)
     }
 }

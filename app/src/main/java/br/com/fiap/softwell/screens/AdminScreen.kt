@@ -1,5 +1,6 @@
 package br.com.fiap.softwell.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,14 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.* // Importa AlertDialog, que é Material3
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,7 +19,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -40,9 +33,7 @@ import br.com.fiap.softwell.model.HumorData
 import br.com.fiap.softwell.ui.theme.Sora
 import br.com.fiap.softwell.viewmodel.HumorDataState
 import br.com.fiap.softwell.viewmodel.HumorViewModel
-import android.util.Log // Importado para logs de debug
 
-// Usei AdminScreenType para manter o padrão que você definiu
 enum class AdminScreenType {
     Humor,
     Apoio
@@ -54,6 +45,9 @@ fun AdminScreen(navController: NavController, humorViewModel: HumorViewModel = v
     var emojiText by remember { mutableStateOf("") }
     val scrollState = rememberScrollState()
     val selectedScreen = remember { mutableStateOf(AdminScreenType.Humor) }
+
+    // NOVO ESTADO: Controla a exibição da mensagem de limite
+    var showLimitMessage by remember { mutableStateOf(false) }
 
     // Obtenha o estado reativo do ViewModel
     val humorDataState by humorViewModel.humorDataState.collectAsState()
@@ -89,9 +83,9 @@ fun AdminScreen(navController: NavController, humorViewModel: HumorViewModel = v
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(scrollState) // Esta rolagem irá funcionar para o conteúdo inteiro
+                    .verticalScroll(scrollState)
             ) {
-                // ... (Cabeçalho, botões Humor/Apoio, e DiamondLine, sem alterações) ...
+                // ... (Cabeçalho com botões Humor/Apoio e DiamondLine) ...
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -159,7 +153,7 @@ fun AdminScreen(navController: NavController, humorViewModel: HumorViewModel = v
                             .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // ... (Formulário Adicionar Novo Humor, sem alterações) ...
+                        // ... (Campos de entrada) ...
                         SessionTitle(
                             text = "Adicionar Novo Humor",
                             fontWeight = FontWeight.Bold,
@@ -205,12 +199,25 @@ fun AdminScreen(navController: NavController, humorViewModel: HumorViewModel = v
                             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                         )
                         Spacer(modifier = Modifier.height(24.dp))
+
+                        // LÓGICA CORRIGIDA DO BOTÃO SALVAR NOVO HUMOR
                         Button(
                             onClick = {
                                 if (moodText.isNotBlank() && emojiText.isNotBlank()) {
-                                    humorViewModel.addHumor(moodText, emojiText)
-                                    moodText = ""
-                                    emojiText = ""
+                                    // Chama a função do ViewModel com o novo callback
+                                    humorViewModel.addHumor(
+                                        estadoDeHumor = moodText,
+                                        emoji = emojiText,
+                                        onLimitReached = {
+                                            // Se o limite for atingido, ativa a mensagem de alerta
+                                            showLimitMessage = true
+                                        }
+                                    )
+                                    // Limpa os campos APENAS se a chamada não for impedida pelo limite
+                                    if (!showLimitMessage) {
+                                        moodText = ""
+                                        emojiText = ""
+                                    }
                                 }
                             },
                             modifier = Modifier.fillMaxWidth().height(50.dp),
@@ -227,7 +234,7 @@ fun AdminScreen(navController: NavController, humorViewModel: HumorViewModel = v
 
                         // --- Lista de Humores ---
                         SessionTitle(
-                            text = "Humores Existentes",
+                            text = "Humores Existentes (${(humorDataState as? HumorDataState.Success)?.data?.size ?: 0}/9)", // Contador opcional
                             fontWeight = FontWeight.Bold,
                             fontFamily = Sora,
                             color = MaterialTheme.colorScheme.primary,
@@ -241,11 +248,8 @@ fun AdminScreen(navController: NavController, humorViewModel: HumorViewModel = v
                                 Text(text = "Carregando humores...", color = colorResource(id = R.color.primary))
                             }
                             is HumorDataState.Success -> {
-                                // CORREÇÃO AQUI: Substituímos o LazyColumn com altura fixa por um Column normal
-                                // para que a lista se expanda e se integre à rolagem principal da tela.
                                 Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
                                     state.data.forEach { humor ->
                                         HumorListItem(humor = humor, onDelete = { id ->
@@ -261,7 +265,7 @@ fun AdminScreen(navController: NavController, humorViewModel: HumorViewModel = v
                         }
                     }
                 } else {
-                    // ... (Conteúdo da tela de Apoio, sem alterações) ...
+                    // ... (Conteúdo da tela de Apoio) ...
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -284,9 +288,23 @@ fun AdminScreen(navController: NavController, humorViewModel: HumorViewModel = v
             }
         }
     }
+
+    // --- DIÁLOGO DE ALERTA DE LIMITE ---
+    if (showLimitMessage) {
+        AlertDialog(
+            onDismissRequest = { showLimitMessage = false },
+            title = { Text("Limite de Humores Atingido") },
+            text = { Text("Você atingiu o limite máximo de 9 humores para exibição. Por favor, exclua um humor existente antes de adicionar um novo.") },
+            confirmButton = {
+                Button(onClick = { showLimitMessage = false }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
 }
 
-// O HumorListItem está perfeito e não precisa de alteração.
+// O HumorListItem não precisa de alteração
 @Composable
 fun HumorListItem(humor: HumorData, onDelete: (String) -> Unit) {
     Row(
@@ -311,7 +329,6 @@ fun HumorListItem(humor: HumorData, onDelete: (String) -> Unit) {
             )
         }
         IconButton(onClick = {
-            // Lógica de exclusão segura.
             humor.id?.let { onDelete(it) }
         }) {
             Icon(
