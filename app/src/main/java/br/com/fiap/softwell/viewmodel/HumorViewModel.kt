@@ -6,6 +6,7 @@ import br.com.fiap.softwell.model.HumorData
 import br.com.fiap.softwell.service.HumorApiService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -19,7 +20,9 @@ sealed class HumorDataState {
 class HumorViewModel : ViewModel() {
 
     private val _humorDataState = MutableStateFlow<HumorDataState>(HumorDataState.Loading)
-    val humorDataState: StateFlow<HumorDataState> = _humorDataState
+
+    val humorDataState: StateFlow<HumorDataState> = _humorDataState.asStateFlow()
+    //val humorDataState: StateFlow<HumorDataState> = _humorDataState
 
     private val retrofit = Retrofit.Builder()
         .baseUrl("http://10.0.2.2:8080/") // URL corrigida para o emulador
@@ -32,21 +35,14 @@ class HumorViewModel : ViewModel() {
         viewModelScope.launch {
             _humorDataState.value = HumorDataState.Loading
             try {
-                // Chama a API e espera por uma lista de objetos
                 val response = apiService.getHumorData()
                 if (response.isSuccessful) {
-                    val dataList = response.body()
-                    if (!dataList.isNullOrEmpty()) {
-                        // Envia a lista inteira para o estado de sucesso
-                        _humorDataState.value = HumorDataState.Success(dataList)
-                    } else {
-                        _humorDataState.value = HumorDataState.Error("Lista de dados vazia")
-                    }
+                    _humorDataState.value = HumorDataState.Success(response.body() ?: emptyList())
                 } else {
-                    _humorDataState.value = HumorDataState.Error("Erro na requisição: ${response.code()}")
+                    _humorDataState.value = HumorDataState.Error("Erro ao carregar dados: ${response.code()}")
                 }
             } catch (e: Exception) {
-                _humorDataState.value = HumorDataState.Error(e.message ?: "Erro desconhecido")
+                _humorDataState.value = HumorDataState.Error("Exceção: ${e.message}")
             }
         }
     }
@@ -58,7 +54,7 @@ class HumorViewModel : ViewModel() {
                 val userResponse = HumorData(estadoDeHumor, emoji)
 
                 // Envia a requisição POST para o backend
-                val response = apiService.saveHumorData(userResponse)
+                val response = apiService.saveUserResponse(userResponse)
 
                 if (response.isSuccessful) {
                     // Log de sucesso
@@ -70,6 +66,42 @@ class HumorViewModel : ViewModel() {
             } catch (e: Exception) {
                 // Log de exceção
                 println("Exceção ao salvar resposta: ${e.message}")
+            }
+        }
+    }
+
+    fun addHumor(estadoDeHumor: String, emoji: String) {
+        viewModelScope.launch {
+            try {
+                val newHumor = HumorData(estadoDeHumor, emoji)
+                val response = apiService.addHumor(newHumor)
+
+                if (response.isSuccessful) {
+                    println("Novo humor adicionado com sucesso!")
+                    // Opcional: recarregar a lista para exibir o novo item
+                    fetchHumorData()
+                } else {
+                    println("Erro ao adicionar humor: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                println("Exceção ao adicionar humor: ${e.message}")
+            }
+        }
+    }
+
+    fun deleteHumor(id: String) {
+        viewModelScope.launch {
+            try {
+                val response = apiService.deleteHumor(id)
+                if (response.isSuccessful) {
+                    println("Humor excluído com sucesso!")
+                    // Recarrega a lista para refletir a exclusão
+                    fetchHumorData()
+                } else {
+                    println("Erro ao excluir humor: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                println("Exceção ao excluir humor: ${e.message}")
             }
         }
     }

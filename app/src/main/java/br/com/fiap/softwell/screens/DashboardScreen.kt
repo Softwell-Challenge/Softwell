@@ -161,6 +161,14 @@ fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel
                                 ) {
                                     Text(text = "Abrir Diário de Humor")
                                 }
+                                // Novo botão para o administrador
+                                Button(
+                                    onClick = { navController.navigate("adminHumorScreen") }, // Rota para a tela de admin
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                                    colors = ButtonDefaults.buttonColors(colorResource(id = R.color.light_green))
+                                ) {
+                                    Text(text = "Painel de Admin")
+                                }
                             }
 
                             if (showMoodPopup.value) {

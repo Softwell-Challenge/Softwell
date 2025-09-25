@@ -6,5 +6,6 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class HumorData(
     @Json(name = "estadoDeHumor") val estadoDeHumor: String,
-    @Json(name = "emoji") val emoji: String
+    @Json(name = "emoji") val emoji: String,
+    @Json(name = "_id") val id: String? = null
 )

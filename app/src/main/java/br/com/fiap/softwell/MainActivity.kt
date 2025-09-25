@@ -17,6 +17,7 @@ import br.com.fiap.softwell.ui.theme.SoftwellTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
 import br.com.fiap.softwell.model.MoodViewModel
 import br.com.fiap.softwell.model.ThemeViewModel
+import br.com.fiap.softwell.screens.AdminScreen
 import br.com.fiap.softwell.screens.GraphicScreen
 
 class MainActivity : ComponentActivity() {
@@ -36,6 +37,7 @@ class MainActivity : ComponentActivity() {
                         composable(route = "psychosocial") { PsychosocialScreen(navController) }
                         composable(route = "support") { SupportScreen(navController) }
                         composable(route = "graphic") { GraphicScreen(navController,moodViewModel) }
+                        composable("adminHumorScreen") { AdminScreen(navController) }
                     }
                 }
             }
