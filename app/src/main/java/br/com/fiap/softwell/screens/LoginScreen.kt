@@ -119,20 +119,8 @@ fun LoginScreen(navController: NavController) {
                 }
             }
         }
-        Image(
-            modifier = Modifier
-                .width(187.dp)
-                .height(187.dp)
-                .offset(x = 205.dp, y = 262.dp)
-                .zIndex(1f),
-            painter = painterResource(id = R.drawable.reverse_triangle),
-            contentDescription = null,
-            contentScale = ContentScale.Crop
-        )
     }
 }
-
-
 
 
 
