@@ -29,10 +29,16 @@ import androidx.navigation.NavController
 import br.com.fiap.softwell.R
 import br.com.fiap.softwell.components.DiamondLine
 import br.com.fiap.softwell.components.SessionTitle
+import br.com.fiap.softwell.model.ActivityVoteReportDTO
 import br.com.fiap.softwell.model.HumorData
+import br.com.fiap.softwell.service.ActivityApiService
 import br.com.fiap.softwell.ui.theme.Sora
+import br.com.fiap.softwell.viewmodel.ActivityDataState // NOVO
+import br.com.fiap.softwell.viewmodel.ActivityViewModel // NOVO
+import br.com.fiap.softwell.viewmodel.ActivityViewModelFactory // NOVO
 import br.com.fiap.softwell.viewmodel.HumorDataState
 import br.com.fiap.softwell.viewmodel.HumorViewModel
+import br.com.fiap.softwell.service.RetrofitFactory // Certifique-se de importar o seu RetrofitFactory
 
 enum class AdminScreenType {
     Humor,
@@ -40,21 +46,48 @@ enum class AdminScreenType {
 }
 
 @Composable
-fun AdminScreen(navController: NavController, humorViewModel: HumorViewModel = viewModel()) {
+fun AdminScreen(
+    navController: NavController,
+    humorViewModel: HumorViewModel = viewModel()
+) {
+    // -------------------------------------------------------------------------
+    // NOVO: Inicialização e Injeção do ViewModel de Atividades (Apoio)
+    // -------------------------------------------------------------------------
+    val activityApiService: ActivityApiService = remember { // CORRIGIDO!
+        RetrofitFactory.getActivityService()
+    }
+    val activityViewModel: ActivityViewModel = viewModel(
+        factory = ActivityViewModelFactory(activityApiService)
+    )
+
+    // -------------------------------------------------------------------------
+    // ESTADOS
+    // -------------------------------------------------------------------------
     var moodText by remember { mutableStateOf("") }
     var emojiText by remember { mutableStateOf("") }
+    var newActivityText by remember { mutableStateOf("") } // NOVO: Campo para nova atividade
+    var showReport by remember { mutableStateOf(true) } // NOVO: Alterna entre Relatório e Adicionar
+    var showLimitMessage by remember { mutableStateOf(false) }
+
     val scrollState = rememberScrollState()
     val selectedScreen = remember { mutableStateOf(AdminScreenType.Humor) }
 
-    // NOVO ESTADO: Controla a exibição da mensagem de limite
-    var showLimitMessage by remember { mutableStateOf(false) }
-
-    // Obtenha o estado reativo do ViewModel
     val humorDataState by humorViewModel.humorDataState.collectAsState()
+    val activityDataState by activityViewModel.activityDataState.collectAsState() // NOVO ESTADO
 
-    // Dispara a busca de dados assim que a tela é composta
+    // -------------------------------------------------------------------------
+    // EFEITOS (BUSCA DE DADOS)
+    // -------------------------------------------------------------------------
     LaunchedEffect(Unit) {
         humorViewModel.fetchHumorData()
+        activityViewModel.fetchData() // NOVO: Busca dados de atividade/relatório
+    }
+
+    // Opcional: Recarregar dados de Apoio ao trocar para a tela de Apoio
+    LaunchedEffect(selectedScreen.value) {
+        if (selectedScreen.value == AdminScreenType.Apoio) {
+            activityViewModel.fetchData()
+        }
     }
 
     val diagonalGradient = Brush.linearGradient(
@@ -85,7 +118,7 @@ fun AdminScreen(navController: NavController, humorViewModel: HumorViewModel = v
                     .fillMaxSize()
                     .verticalScroll(scrollState)
             ) {
-                // ... (Cabeçalho com botões Humor/Apoio e DiamondLine) ...
+                // ... (Cabeçalho permanece igual) ...
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -147,13 +180,13 @@ fun AdminScreen(navController: NavController, humorViewModel: HumorViewModel = v
                 DiamondLine(modifier = Modifier.padding(bottom = 8.dp))
 
                 if (selectedScreen.value == AdminScreenType.Humor) {
+                    // CÓDIGO DA TELA DE HUMOR (PERMANECE IGUAL)
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // ... (Campos de entrada) ...
                         SessionTitle(
                             text = "Adicionar Novo Humor",
                             fontWeight = FontWeight.Bold,
@@ -200,20 +233,14 @@ fun AdminScreen(navController: NavController, humorViewModel: HumorViewModel = v
                         )
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // LÓGICA CORRIGIDA DO BOTÃO SALVAR NOVO HUMOR
                         Button(
                             onClick = {
                                 if (moodText.isNotBlank() && emojiText.isNotBlank()) {
-                                    // Chama a função do ViewModel com o novo callback
                                     humorViewModel.addHumor(
                                         estadoDeHumor = moodText,
                                         emoji = emojiText,
-                                        onLimitReached = {
-                                            // Se o limite for atingido, ativa a mensagem de alerta
-                                            showLimitMessage = true
-                                        }
+                                        onLimitReached = { showLimitMessage = true }
                                     )
-                                    // Limpa os campos APENAS se a chamada não for impedida pelo limite
                                     if (!showLimitMessage) {
                                         moodText = ""
                                         emojiText = ""
@@ -234,7 +261,7 @@ fun AdminScreen(navController: NavController, humorViewModel: HumorViewModel = v
 
                         // --- Lista de Humores ---
                         SessionTitle(
-                            text = "Humores Existentes (${(humorDataState as? HumorDataState.Success)?.data?.size ?: 0}/9)", // Contador opcional
+                            text = "Humores Existentes (${(humorDataState as? HumorDataState.Success)?.data?.size ?: 0}/9)",
                             fontWeight = FontWeight.Bold,
                             fontFamily = Sora,
                             color = MaterialTheme.colorScheme.primary,
@@ -242,7 +269,6 @@ fun AdminScreen(navController: NavController, humorViewModel: HumorViewModel = v
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Renderiza a lista com base no estado do ViewModel
                         when (val state = humorDataState) {
                             is HumorDataState.Loading -> {
                                 Text(text = "Carregando humores...", color = colorResource(id = R.color.primary))
@@ -265,31 +291,184 @@ fun AdminScreen(navController: NavController, humorViewModel: HumorViewModel = v
                         }
                     }
                 } else {
-                    // ... (Conteúdo da tela de Apoio) ...
+                    // CÓDIGO DA TELA DE APOIO (NOVO CONTEÚDO)
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        SessionTitle(
-                            text = "Apoio",
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = Sora,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = "Este é o conteúdo da tela de Apoio.",
-                            modifier = Modifier.padding(top = 16.dp),
-                            color = colorResource(id = R.color.primary)
-                        )
+                        // Botões de Ação: Visualizar Votos / Adicionar Opção
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(colorResource(id = R.color.bg_dark))
+                                .padding(4.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            // Botão de VISUALIZAR RELATÓRIO
+                            Button(
+                                onClick = { showReport = true },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (showReport) colorResource(id = R.color.primary) else Color.Transparent
+                                )
+                            ) {
+                                Text(
+                                    text = "VOTOS",
+                                    color = if (showReport) colorResource(id = R.color.bg_dark) else colorResource(id = R.color.primary)
+                                )
+                            }
+
+                            // Botão de ADICIONAR NOVA OPÇÃO
+                            Button(
+                                onClick = { showReport = false },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (!showReport) colorResource(id = R.color.primary) else Color.Transparent
+                                )
+                            ) {
+                                Text(
+                                    text = "ADICIONAR",
+                                    color = if (!showReport) colorResource(id = R.color.bg_dark) else colorResource(id = R.color.primary)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        if (showReport) {
+                            // --- VISUALIZAÇÃO DO RELATÓRIO (VOTOS) ---
+                            SessionTitle(
+                                text = "Resultado da Votação de Apoio",
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = Sora,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            )
+
+                            when (val state = activityDataState) {
+                                is ActivityDataState.Loading -> {
+                                    Text(text = "Carregando relatório...", color = colorResource(id = R.color.primary))
+                                }
+                                is ActivityDataState.Success -> {
+                                    if (state.report.isEmpty()) {
+                                        Text(text = "Nenhuma atividade ou voto encontrado.", color = colorResource(id = R.color.light_blue))
+                                    } else {
+                                        Column(modifier = Modifier.fillMaxWidth()) {
+                                            // Ordena por contagem de votos (maior para o menor)
+                                            state.report.sortedByDescending { it.voteCount }.forEach { reportItem ->
+                                                VoteReportListItem(
+                                                    reportItem = reportItem,
+                                                    showVoteCount = true,
+                                                    onDelete = { activityId ->
+                                                        activityViewModel.deleteActivity(activityId)
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                                is ActivityDataState.Error -> {
+                                    Text(text = "Erro ao buscar relatório: ${state.message}", color = Color.Red)
+                                }
+                            }
+
+                        } else {
+                            // --- ADICIONAR NOVA OPÇÃO (CRUD) ---
+                            SessionTitle(
+                                text = "Adicionar Nova Opção de Apoio",
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = Sora,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = "Preencha o campo para adicionar uma nova opção de atividade para votação.",
+                                fontSize = 18.sp,
+                                fontFamily = Sora,
+                                fontWeight = FontWeight.Normal,
+                                color = colorResource(id = R.color.light_blue),
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(bottom = 24.dp)
+                            )
+                            TextField(
+                                value = newActivityText,
+                                onValueChange = { newActivityText = it },
+                                label = { Text("Opção de Atividade", color = colorResource(id = R.color.light_blue)) },
+                                colors = TextFieldDefaults.colors(
+                                    unfocusedContainerColor = Color.Transparent,
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedLabelColor = colorResource(id = R.color.light_blue),
+                                    focusedLabelColor = colorResource(id = R.color.primary),
+                                    cursorColor = colorResource(id = R.color.primary),
+                                    focusedIndicatorColor = colorResource(id = R.color.primary)
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                            )
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            Button(
+                                onClick = {
+                                    if (newActivityText.isNotBlank()) {
+                                        activityViewModel.addActivity(newActivityText)
+                                        newActivityText = ""
+                                        showReport = true // Volta para o relatório após adicionar
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(50.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(colorResource(id = R.color.blue))
+                            ) {
+                                Text(
+                                    text = "SALVAR NOVA OPÇÃO",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 18.sp,
+                                    color = colorResource(id = R.color.primary)
+                                )
+                            }
+
+                            // Lista de opções existentes (sem a contagem de votos, para CRUD)
+                            SessionTitle(
+                                text = "Opções Existentes (CRUD)",
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = Sora,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(top = 24.dp)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            when (val state = activityDataState) {
+                                is ActivityDataState.Success -> {
+                                    Column(modifier = Modifier.fillMaxWidth()) {
+                                        state.activities.forEach { activity ->
+                                            // Usa o item de relatório, mas força a não exibir a contagem
+                                            VoteReportListItem(
+                                                reportItem = ActivityVoteReportDTO(activity.id ?: "", activity.activity, 0),
+                                                showVoteCount = false,
+                                                onDelete = { activityId ->
+                                                    activityViewModel.deleteActivity(activityId)
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                                else -> Unit // Não mostra nada para evitar mensagens duplicadas
+                            }
+                        }
                     }
                 }
             }
         }
     }
 
-    // --- DIÁLOGO DE ALERTA DE LIMITE ---
+    // --- DIÁLOGO DE ALERTA DE LIMITE (PERMANECE IGUAL) ---
     if (showLimitMessage) {
         AlertDialog(
             onDismissRequest = { showLimitMessage = false },
@@ -304,7 +483,9 @@ fun AdminScreen(navController: NavController, humorViewModel: HumorViewModel = v
     }
 }
 
-// O HumorListItem não precisa de alteração
+// -------------------------------------------------------------------------
+// COMPONENTE: Item para Humor (Permanece igual)
+// -------------------------------------------------------------------------
 @Composable
 fun HumorListItem(humor: HumorData, onDelete: (String) -> Unit) {
     Row(
@@ -337,5 +518,77 @@ fun HumorListItem(humor: HumorData, onDelete: (String) -> Unit) {
                 tint = colorResource(id = R.color.light_blue)
             )
         }
+    }
+}
+
+// -------------------------------------------------------------------------
+// COMPONENTE NOVO: Item para Relatório/CRUD de Atividades (Apoio)
+// -------------------------------------------------------------------------
+@Composable
+fun VoteReportListItem(reportItem: ActivityVoteReportDTO, showVoteCount: Boolean, onDelete: (String) -> Unit) {
+    val showDialog = remember { mutableStateOf(false) }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .background(colorResource(id = R.color.bg_dark), RoundedCornerShape(12.dp))
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        // Nome da Atividade + Contagem de Votos (se ativado)
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+            Text(
+                text = reportItem.activityName,
+                color = colorResource(id = R.color.primary),
+                fontWeight = FontWeight.Bold,
+            )
+
+            if (showVoteCount) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "(${reportItem.voteCount} votos)", // EXIBIÇÃO DA CONTAGEM
+                    color = colorResource(id = R.color.light_green),
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 14.sp
+                )
+            }
+        }
+
+        // Ícone de Excluir
+        IconButton(onClick = {
+            if (!reportItem.activityId.isNullOrBlank()) {
+                showDialog.value = true
+            }
+        }) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Excluir",
+                tint = colorResource(id = R.color.light_blue)
+            )
+        }
+    }
+
+    // Diálogo de confirmação de exclusão
+    if (showDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showDialog.value = false },
+            title = { Text("Confirmar Exclusão") },
+            text = { Text("Tem certeza que deseja excluir a opção: ${reportItem.activityName}? Isso é irreversível e pode afetar a contagem de votos existentes.") },
+            confirmButton = {
+                Button(onClick = {
+                    onDelete(reportItem.activityId)
+                    showDialog.value = false
+                }) {
+                    Text("Excluir")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showDialog.value = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }

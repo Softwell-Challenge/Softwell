@@ -15,10 +15,11 @@ import br.com.fiap.softwell.screens.PsychosocialScreen
 import br.com.fiap.softwell.screens.SupportScreen
 import br.com.fiap.softwell.ui.theme.SoftwellTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
-import br.com.fiap.softwell.model.MoodViewModel
+//import br.com.fiap.softwell.model.MoodViewModel
 import br.com.fiap.softwell.model.ThemeViewModel
 import br.com.fiap.softwell.screens.AdminScreen
 import br.com.fiap.softwell.screens.GraphicScreen
+import br.com.fiap.softwell.viewmodel.MoodViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -46,9 +46,10 @@ import br.com.fiap.softwell.database.dao.AppDatabase
 import br.com.fiap.softwell.database.repository.PsychoSocialRepository
 import br.com.fiap.softwell.database.repository.UserMoodRepository
 import br.com.fiap.softwell.model.Mood
-import br.com.fiap.softwell.model.MoodViewModel
+//import br.com.fiap.softwell.model.MoodViewModel
 import br.com.fiap.softwell.model.PsychoSocial
 import br.com.fiap.softwell.model.UserMood
+import br.com.fiap.softwell.viewmodel.MoodViewModel
 
 @Composable
 fun GraphicScreen(navController: NavController,moodViewModel: MoodViewModel) {
