@@ -25,34 +25,39 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import br.com.fiap.softwell.R
 import br.com.fiap.softwell.components.DiamondLine
 import br.com.fiap.softwell.components.ExpandableTipCard
 import br.com.fiap.softwell.components.SessionTitle
-import br.com.fiap.softwell.database.dao.AppDatabase
-import br.com.fiap.softwell.database.repository.SupportRepository
-import br.com.fiap.softwell.model.Support
-import br.com.fiap.softwell.model.Tip
-import br.com.fiap.softwell.model.TipsData
+import br.com.fiap.softwell.model.TipsData // Certifique-se de que TipsData existe
+import br.com.fiap.softwell.service.ActivityApiService
 import br.com.fiap.softwell.ui.theme.Sora
-import java.sql.Date
+import br.com.fiap.softwell.viewmodel.UserActivityState
+import br.com.fiap.softwell.viewmodel.UserActivityViewModel
+import br.com.fiap.softwell.viewmodel.UserActivityViewModelFactory
+import kotlinx.coroutines.launch
 
 enum class SupportScreenType {
     Care,
@@ -60,14 +65,51 @@ enum class SupportScreenType {
 }
 
 @Composable
-fun SupportScreen(navController: NavController) {
-    val selectedScreen = remember { mutableStateOf(SupportScreenType.Care) }
+fun SupportScreen(
+    navController: NavController,
+    // PARÂMETRO NECESSÁRIO
+    apiService: ActivityApiService
+) {
+    // 1. Inicializa o ViewModel usando a Factory
+    val viewModel: UserActivityViewModel = viewModel(
+        factory = UserActivityViewModelFactory(apiService)
+    )
 
-    val context = LocalContext.current
-    val supportRepository = SupportRepository(context)
-    val db = remember { AppDatabase.getDatabase(context) }
+    // 2. Observa o estado do ViewModel
+    val state = viewModel.activityState.collectAsState().value
+
+    // Estados locais para UI
+    val selectedScreen = remember { mutableStateOf(SupportScreenType.Care) }
+    val selectedActivityId = remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
+    // 3. Efeito para carregar as atividades quando a tela é iniciada
+    LaunchedEffect(Unit) {
+        viewModel.fetchActivities()
+    }
+
+    // 4. Efeito para exibir mensagens (erro ou sucesso)
+    LaunchedEffect(state) {
+        when (state) {
+            is UserActivityState.Error -> {
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar("ERRO: ${state.message}")
+                }
+            }
+            is UserActivityState.VoteRegistered -> {
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar("Voto registrado com sucesso!")
+                    selectedActivityId.value = null // Limpa a seleção
+                    viewModel.resetVoteState() // Retorna para o estado de sucesso
+                }
+            }
+            else -> {}
+        }
+    }
+
+    // ... (Definição do diagonalGradient)
     val diagonalGradient = Brush.linearGradient(
         colors = listOf(
             colorResource(id = R.color.bg_dark),
@@ -78,23 +120,14 @@ fun SupportScreen(navController: NavController) {
         end = Offset(1000f, 1000f)
     )
 
-    val options = listOf(
-        "Jogo de xadrez pós-almoço",
-        "Aula de yoga pela tarde",
-        "30 min de música relaxante (meditação)",
-        "Massagens oferecidas aos colaboradores",
-        "Musicoterapia",
-        "Rodas de conversa com psicólogos",
-        "Sessões de alongamento guiado"
-    )
-
-    val selectedOption = remember { mutableStateOf<String?>(null) }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(diagonalGradient)
     ) {
+        // SNACKBAR HOST
+        SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.TopCenter))
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -106,6 +139,7 @@ fun SupportScreen(navController: NavController) {
             Column(
                 modifier = Modifier.verticalScroll(scrollState)
             ) {
+                // ... (Cabeçalho com botão de voltar e toggle)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -172,58 +206,77 @@ fun SupportScreen(navController: NavController) {
                 }
                 Spacer(modifier = Modifier.height(24.dp))
 
+                // 5. Bloco de Conteúdo da Votação (SupportScreenType.Care)
                 if (selectedScreen.value == SupportScreenType.Care) {
-                    options.forEach { option ->
-                        Card(
-                            modifier = Modifier
-                                .padding(horizontal = 8.dp)
-                                .fillMaxWidth()
-                                .clickable { selectedOption.value = option }
-                                .border(
-                                    width = if (selectedOption.value == option) 2.dp else 1.dp,
-                                    color = if (selectedOption.value == option) colorResource(id = R.color.light_blue)
-                                    else colorResource(id = R.color.primary),
-                                    shape = RoundedCornerShape(12.dp)
-                                ),
-                            colors = CardDefaults.cardColors(
-                                containerColor = colorResource(id = R.color.bg_dark)
-                            ),
-                            shape = RoundedCornerShape(12.dp),
-                            elevation = CardDefaults.cardElevation(4.dp)
-                        ) {
-                            Text(
-                                text = option,
-                                modifier = Modifier.padding(16.dp),
-                                fontSize = 16.sp,
-                                fontWeight = if (selectedOption.value == option) FontWeight.Bold else FontWeight.Normal,
-                                color = colorResource(id = R.color.primary)
-                            )
+                    when (state) {
+                        is UserActivityState.Loading -> {
+                            Text("Carregando opções de atividades...", modifier = Modifier.padding(16.dp))
                         }
+                        is UserActivityState.Error -> {
+                            Text("Falha ao carregar as atividades. Verifique o servidor.", color = colorResource(id = R.color.black), modifier = Modifier.padding(16.dp))
+                        }
+                        is UserActivityState.Success -> {
+                            // Renderiza a lista de atividades do backend
+                            state.activities.forEach { activity ->
+                                Card(
+                                    modifier = Modifier
+                                        .padding(vertical = 4.dp, horizontal = 16.dp)
+                                        .fillMaxWidth()
+                                        .clickable { selectedActivityId.value = activity.id } // Armazena o ID
+                                        .border(
+                                            width = if (selectedActivityId.value == activity.id) 2.dp else 1.dp,
+                                            color = if (selectedActivityId.value == activity.id) colorResource(id = R.color.light_blue)
+                                            else colorResource(id = R.color.primary),
+                                            shape = RoundedCornerShape(12.dp)
+                                        ),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = colorResource(id = R.color.bg_dark)
+                                    ),
+                                    shape = RoundedCornerShape(12.dp),
+                                    elevation = CardDefaults.cardElevation(4.dp)
+                                ) {
+                                    Text(
+                                        text = activity.activity, // Usa o campo 'activity' do modelo
+                                        modifier = Modifier.padding(16.dp),
+                                        fontSize = 16.sp,
+                                        fontWeight = if (selectedActivityId.value == activity.id) FontWeight.Bold else FontWeight.Normal,
+                                        color = colorResource(id = R.color.primary)
+                                    )
+                                }
+                            }
+
+                            if (state.activities.isEmpty()) {
+                                Text("Nenhuma atividade disponível para votação.", modifier = Modifier.padding(16.dp))
+                            }
+                        }
+                        is UserActivityState.VoteRegistered -> { /* Estado de transição, ignora UI */ }
                     }
+
+                    // Botão VOTAR
                     Button(
                         onClick = {
-                            val support = Support(
-                                id = 0,
-                                selectedOption.value.toString(),
-                                System.currentTimeMillis()
-                            )
-                            supportRepository.salvar(support)
+                            selectedActivityId.value?.let { id ->
+                                viewModel.registrarVoto(id) // Chama a função de voto do ViewModel
+                            }
                         },
                         modifier = Modifier
                             .padding(8.dp)
                             .fillMaxWidth()
                             .height(50.dp),
                         shape = RoundedCornerShape(12.dp),
-                        enabled = selectedOption.value != null,
+                        // Habilita se um ID for selecionado E NÃO estiver em estado de loading
+                        enabled = selectedActivityId.value != null && state !is UserActivityState.Loading,
                         colors = ButtonDefaults.buttonColors(colorResource(id = R.color.blue))
                     ) {
                         Text(
-                            text = "VOTAR",
+                            text = if (state is UserActivityState.Loading) "ENVIANDO..." else "VOTAR",
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp,
                             color = colorResource(id = R.color.primary)
                         )
                     }
+
+                    // ... (Informações adicionais)
                     Text(
                         text = "Sua votação é anônima.",
                         fontSize = 14.sp,
@@ -257,6 +310,7 @@ fun SupportScreen(navController: NavController) {
                         }
                     }
                 } else {
+                    // Lógica para Orientações (Guidelines)
                     Column(
                         modifier = Modifier
                             .fillMaxSize()

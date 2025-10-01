@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow // IMPORTANTE para o ...
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -33,12 +34,12 @@ import br.com.fiap.softwell.model.ActivityVoteReportDTO
 import br.com.fiap.softwell.model.HumorData
 import br.com.fiap.softwell.service.ActivityApiService
 import br.com.fiap.softwell.ui.theme.Sora
-import br.com.fiap.softwell.viewmodel.ActivityDataState // NOVO
-import br.com.fiap.softwell.viewmodel.ActivityViewModel // NOVO
-import br.com.fiap.softwell.viewmodel.ActivityViewModelFactory // NOVO
+import br.com.fiap.softwell.viewmodel.ActivityDataState
+import br.com.fiap.softwell.viewmodel.ActivityViewModel
+import br.com.fiap.softwell.viewmodel.ActivityViewModelFactory
 import br.com.fiap.softwell.viewmodel.HumorDataState
 import br.com.fiap.softwell.viewmodel.HumorViewModel
-import br.com.fiap.softwell.service.RetrofitFactory // Certifique-se de importar o seu RetrofitFactory
+import br.com.fiap.softwell.service.RetrofitFactory
 
 enum class AdminScreenType {
     Humor,
@@ -53,7 +54,7 @@ fun AdminScreen(
     // -------------------------------------------------------------------------
     // NOVO: Inicialização e Injeção do ViewModel de Atividades (Apoio)
     // -------------------------------------------------------------------------
-    val activityApiService: ActivityApiService = remember { // CORRIGIDO!
+    val activityApiService: ActivityApiService = remember {
         RetrofitFactory.getActivityService()
     }
     val activityViewModel: ActivityViewModel = viewModel(
@@ -65,25 +66,24 @@ fun AdminScreen(
     // -------------------------------------------------------------------------
     var moodText by remember { mutableStateOf("") }
     var emojiText by remember { mutableStateOf("") }
-    var newActivityText by remember { mutableStateOf("") } // NOVO: Campo para nova atividade
-    var showReport by remember { mutableStateOf(true) } // NOVO: Alterna entre Relatório e Adicionar
+    var newActivityText by remember { mutableStateOf("") }
+    var showReport by remember { mutableStateOf(true) }
     var showLimitMessage by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
     val selectedScreen = remember { mutableStateOf(AdminScreenType.Humor) }
 
     val humorDataState by humorViewModel.humorDataState.collectAsState()
-    val activityDataState by activityViewModel.activityDataState.collectAsState() // NOVO ESTADO
+    val activityDataState by activityViewModel.activityDataState.collectAsState()
 
     // -------------------------------------------------------------------------
     // EFEITOS (BUSCA DE DADOS)
     // -------------------------------------------------------------------------
     LaunchedEffect(Unit) {
         humorViewModel.fetchHumorData()
-        activityViewModel.fetchData() // NOVO: Busca dados de atividade/relatório
+        activityViewModel.fetchData()
     }
 
-    // Opcional: Recarregar dados de Apoio ao trocar para a tela de Apoio
     LaunchedEffect(selectedScreen.value) {
         if (selectedScreen.value == AdminScreenType.Apoio) {
             activityViewModel.fetchData()
@@ -180,7 +180,7 @@ fun AdminScreen(
                 DiamondLine(modifier = Modifier.padding(bottom = 8.dp))
 
                 if (selectedScreen.value == AdminScreenType.Humor) {
-                    // CÓDIGO DA TELA DE HUMOR (PERMANECE IGUAL)
+                    // CÓDIGO DA TELA DE HUMOR
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -417,7 +417,6 @@ fun AdminScreen(
                                     if (newActivityText.isNotBlank()) {
                                         activityViewModel.addActivity(newActivityText)
                                         newActivityText = ""
-                                        showReport = true // Volta para o relatório após adicionar
                                     }
                                 },
                                 modifier = Modifier
@@ -427,7 +426,7 @@ fun AdminScreen(
                                 colors = ButtonDefaults.buttonColors(colorResource(id = R.color.blue))
                             ) {
                                 Text(
-                                    text = "SALVAR NOVA OPÇÃO",
+                                    text = "ADICIONAR ATIVIDADE",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 18.sp,
                                     color = colorResource(id = R.color.primary)
@@ -436,7 +435,7 @@ fun AdminScreen(
 
                             // Lista de opções existentes (sem a contagem de votos, para CRUD)
                             SessionTitle(
-                                text = "Opções Existentes (CRUD)",
+                                text = "Opções Existentes",
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = Sora,
                                 color = MaterialTheme.colorScheme.primary,
@@ -522,7 +521,7 @@ fun HumorListItem(humor: HumorData, onDelete: (String) -> Unit) {
 }
 
 // -------------------------------------------------------------------------
-// COMPONENTE NOVO: Item para Relatório/CRUD de Atividades (Apoio)
+// COMPONENTE CORRIGIDO: Item para Relatório/CRUD de Atividades (Apoio)
 // -------------------------------------------------------------------------
 @Composable
 fun VoteReportListItem(reportItem: ActivityVoteReportDTO, showVoteCount: Boolean, onDelete: (String) -> Unit) {
@@ -537,26 +536,28 @@ fun VoteReportListItem(reportItem: ActivityVoteReportDTO, showVoteCount: Boolean
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        // Nome da Atividade + Contagem de Votos (se ativado)
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-            Text(
-                text = reportItem.activityName,
-                color = colorResource(id = R.color.primary),
-                fontWeight = FontWeight.Bold,
-            )
+        // Nome da Atividade (A CHAVE DA CORREÇÃO é o .weight(1f) aqui)
+        Text(
+            text = reportItem.activityName,
+            color = colorResource(id = R.color.primary),
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(1f), // Ocupa todo o espaço restante
+            maxLines = 2, // Limita o número de linhas para evitar quebra de layout
+            overflow = TextOverflow.Ellipsis // Adiciona '...' se o texto for truncado
+        )
 
-            if (showVoteCount) {
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "(${reportItem.voteCount} votos)", // EXIBIÇÃO DA CONTAGEM
-                    color = colorResource(id = R.color.light_green),
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 14.sp
-                )
-            }
+        // Contagem de Votos (espaço fixo à direita)
+        if (showVoteCount) {
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "(${reportItem.voteCount} votos)",
+                color = colorResource(id = R.color.light_green),
+                fontWeight = FontWeight.Normal,
+                fontSize = 14.sp
+            )
         }
 
-        // Ícone de Excluir
+        // Ícone de Excluir (espaço fixo à direita)
         IconButton(onClick = {
             if (!reportItem.activityId.isNullOrBlank()) {
                 showDialog.value = true

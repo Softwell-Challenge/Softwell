@@ -19,11 +19,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import br.com.fiap.softwell.model.ThemeViewModel
 import br.com.fiap.softwell.screens.AdminScreen
 import br.com.fiap.softwell.screens.GraphicScreen
+import br.com.fiap.softwell.service.RetrofitFactory
 import br.com.fiap.softwell.viewmodel.MoodViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val activityApiService = RetrofitFactory.getActivityService()
+
         setContent {
 
             val themeViewModel: ThemeViewModel = viewModel() // ViewModel para controlar o tema
@@ -36,7 +40,9 @@ class MainActivity : ComponentActivity() {
                         composable(route = "login") { LoginScreen(navController) }
                         composable(route = "dashboard") { DashboardScreen(navController, themeViewModel) }
                         composable(route = "psychosocial") { PsychosocialScreen(navController) }
-                        composable(route = "support") { SupportScreen(navController) }
+                        composable(route = "support") {
+                            SupportScreen(navController, activityApiService)
+                        }
                         composable(route = "graphic") { GraphicScreen(navController,moodViewModel) }
                         composable("adminHumorScreen") { AdminScreen(navController) }
                     }
