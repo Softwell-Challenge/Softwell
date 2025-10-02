@@ -103,14 +103,17 @@ fun AdminScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(diagonalGradient)
+            .background(diagonalGradient) // Aplicando o fundo gradiente
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(8.dp)
-                .clip(RoundedCornerShape(6.dp))
-                .shadow(elevation = 6.dp)
+                // ✅ AJUSTE: Aplicando padding horizontal e removendo vertical
+                .padding(horizontal = 8.dp)
+                // ✅ AJUSTE: Removendo arredondamento
+                .clip(RoundedCornerShape(0.dp))
+                // ✅ AJUSTE: Removendo sombra
+                .shadow(elevation = 0.dp)
                 .background(MaterialTheme.colorScheme.background)
         ) {
             Column(
@@ -118,11 +121,14 @@ fun AdminScreen(
                     .fillMaxSize()
                     .verticalScroll(scrollState)
             ) {
-                // ... (Cabeçalho permanece igual) ...
+                // 🚀 NOVO: Espaçamento de 30dp para a Status Bar
+                Spacer(modifier = Modifier.height(30.dp))
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 12.dp),
+                        // ✅ AJUSTE: Padding vertical consistente (8.dp)
+                        .padding(horizontal = 8.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -184,7 +190,7 @@ fun AdminScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
+                            .padding(horizontal = 16.dp), // Aplicando padding interno
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         SessionTitle(
@@ -295,7 +301,7 @@ fun AdminScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
+                            .padding(horizontal = 16.dp), // Aplicando padding interno
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         // Botões de Ação: Visualizar Votos / Adicionar Opção
@@ -463,6 +469,9 @@ fun AdminScreen(
                         }
                     }
                 }
+
+                // ✅ AJUSTE: Espaçamento inferior consistente (32dp)
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }

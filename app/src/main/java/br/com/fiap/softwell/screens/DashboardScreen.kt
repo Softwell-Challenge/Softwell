@@ -19,13 +19,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+// 💡 Importações de ícones para o alternador de tema
+import androidx.compose.material.icons.filled.NightsStay
+import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
+// import androidx.compose.material3.Switch // Não é mais necessário
+// import androidx.compose.material3.SwitchDefaults // Não é mais necessário
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -40,6 +43,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector // Para o ícone dinâmico
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -59,14 +63,15 @@ import br.com.fiap.softwell.ui.theme.Sora
 import br.com.fiap.softwell.viewmodel.HumorDataState
 import br.com.fiap.softwell.viewmodel.HumorViewModel
 
+
+
+
 @Composable
 fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel) {
     val scrollState = rememberScrollState()
 
     val context = LocalContext.current
-    val moodOptionRepository = UserMoodRepository(context)
     val db = remember { AppDatabase.getDatabase(context) }
-    val userMoodDao = db.userMoodDao()
 
     val humorViewModel: HumorViewModel = viewModel()
     val humorDataState by humorViewModel.humorDataState.collectAsState()
@@ -76,6 +81,7 @@ fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel
         humorViewModel.fetchHumorData()
     }
 
+    // 🚀 Definição do gradiente de fundo
     val diagonalGradient = Brush.linearGradient(
         colors = listOf(
             colorResource(id = R.color.bg_dark),
@@ -86,6 +92,12 @@ fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel
         end = Offset(1000f, 1000f)
     )
 
+    // Determina o ícone e a cor com base no tema atual
+    val isDarkTheme = themeViewModel.isDarkTheme.value
+    val themeIcon: ImageVector = if (isDarkTheme) Icons.Filled.WbSunny else Icons.Filled.NightsStay
+    val iconTint = colorResource(id = R.color.light_green)
+
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -94,20 +106,23 @@ fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(8.dp)
-                .clip(RoundedCornerShape(6.dp))
-                .shadow(
-                    elevation = 6.dp
-                )
+                .padding(horizontal = 8.dp)
+                .clip(RoundedCornerShape(0.dp))
+                .shadow(elevation = 0.dp)
                 .background(MaterialTheme.colorScheme.background),
         ) {
             Column(
-                modifier = Modifier.verticalScroll(scrollState)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
             ) {
+                // Espaçamento de 30dp para a Status Bar
+                Spacer(modifier = Modifier.height(30.dp))
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(8.dp),
+                        .padding(horizontal = 8.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -119,13 +134,15 @@ fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel
                         contentDescription = "Voltar",
                         tint = colorResource(id = R.color.light_green)
                     )
-                    Switch(
-                        checked = themeViewModel.isDarkTheme.value,
-                        onCheckedChange = { themeViewModel.toggleTheme() },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = colorResource(id = R.color.bg_light),
-                            uncheckedThumbColor = colorResource(id = R.color.bg_dark)
-                        )
+
+                    // 💡 NOVO: Ícone clicável para alternar o tema
+                    Icon(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clickable { themeViewModel.toggleTheme() },
+                        imageVector = themeIcon,
+                        contentDescription = if (isDarkTheme) "Mudar para modo claro (Sol)" else "Mudar para modo escuro (Lua)",
+                        tint = iconTint
                     )
                 }
                 DiamondLine()
@@ -195,9 +212,15 @@ fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel
                 Spacer(modifier = Modifier.height(24.dp))
                 DiamondLine()
                 Spacer(modifier = Modifier.height(18.dp))
-                DashboardCard("Avaliação Psicossocial", "psychosocial", navController)
-                DashboardCard("Recursos de Apoio", "support", navController)
-                DashboardCard("Gráficos Pessoais", "graphic", navController)
+
+                Column(modifier = Modifier.padding(horizontal = 8.dp)) {
+                    DashboardCard("Avaliação Psicossocial", "psychosocial", navController)
+                    DashboardCard("Recursos de Apoio", "support", navController)
+                    DashboardCard("Gráficos Pessoais", "graphic", navController)
+                }
+
+                // Espaçamento inferior grande (32dp)
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }
@@ -270,24 +293,20 @@ fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel
 //    val scrollState = rememberScrollState()
 //
 //    val context = LocalContext.current
-//    val moodOptionRepository = UserMoodRepository(context)
 //    val db = remember { AppDatabase.getDatabase(context) }
-//    val userMoodDao = db.userMoodDao()
+//    // As linhas abaixo não estão sendo usadas, mas as mantenho caso você precise delas:
+//    // val moodOptionRepository = UserMoodRepository(context)
+//    // val userMoodDao = db.userMoodDao()
 //
-//    // ViewModel para gerenciar o estado da API
 //    val humorViewModel: HumorViewModel = viewModel()
 //    val humorDataState by humorViewModel.humorDataState.collectAsState()
 //    val showMoodPopup = remember { mutableStateOf(false) }
 //
-//    // Inicia a busca pelos dados da API quando a tela é carregada
 //    LaunchedEffect(Unit) {
 //        humorViewModel.fetchHumorData()
 //    }
 //
-//    // Removidos os dados fixos
-//    // val moodOptions = listOf(...)
-//    // val emojis = listOf(...)
-//
+//    // 🚀 NOVO: Definição do gradiente de fundo
 //    val diagonalGradient = Brush.linearGradient(
 //        colors = listOf(
 //            colorResource(id = R.color.bg_dark),
@@ -301,25 +320,33 @@ fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel
 //    Box(
 //        modifier = Modifier
 //            .fillMaxSize()
+//            // 🚀 NOVO: Aplicando o gradiente de fundo
 //            .background(diagonalGradient)
 //    ) {
 //        Box(
 //            modifier = Modifier
 //                .fillMaxSize()
-//                .padding(8.dp)
-//                .clip(RoundedCornerShape(6.dp))
-//                .shadow(
-//                    elevation = 6.dp
-//                )
+//                // ✅ AJUSTE: Aplicando o padding horizontal padrão (8.dp)
+//                .padding(horizontal = 8.dp)
+//                // ✅ AJUSTE: Removendo arredondamento
+//                .clip(RoundedCornerShape(0.dp))
+//                // ✅ AJUSTE: Removendo sombra
+//                .shadow(elevation = 0.dp)
 //                .background(MaterialTheme.colorScheme.background),
 //        ) {
 //            Column(
-//                modifier = Modifier.verticalScroll(scrollState)
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .verticalScroll(scrollState)
 //            ) {
+//                // 🚀 NOVO: Espaçamento de 30dp para a Status Bar
+//                Spacer(modifier = Modifier.height(30.dp))
+//
 //                Row(
 //                    modifier = Modifier
 //                        .fillMaxWidth()
-//                        .padding(8.dp),
+//                        // ✅ AJUSTE: Padding vertical consistente (8.dp)
+//                        .padding(horizontal = 8.dp, vertical = 8.dp),
 //                    horizontalArrangement = Arrangement.SpaceBetween,
 //                    verticalAlignment = Alignment.CenterVertically
 //                ) {
@@ -342,11 +369,10 @@ fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel
 //                }
 //                DiamondLine()
 //
-//                // Nova seção do Diário de Humor (agora dinâmica)
 //                Box(
 //                    modifier = Modifier
 //                        .fillMaxWidth()
-//                        .height(150.dp) // Altura fixa para o Box
+//                        .height(150.dp)
 //                        .padding(top = 8.dp)
 //                ) {
 //                    when (val state = humorDataState) {
@@ -374,15 +400,22 @@ fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel
 //                                ) {
 //                                    Text(text = "Abrir Diário de Humor")
 //                                }
+//                                // Novo botão para o administrador
+//                                Button(
+//                                    onClick = { navController.navigate("adminHumorScreen") }, // Rota para a tela de admin
+//                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+//                                    colors = ButtonDefaults.buttonColors(colorResource(id = R.color.light_green))
+//                                ) {
+//                                    Text(text = "Painel de Admin")
+//                                }
 //                            }
 //
 //                            if (showMoodPopup.value) {
 //                                HumorPopup(
-//                                    humorData = state.data,
+//                                    humorDataList = state.data, // Corrigido para passar a lista
 //                                    onDismiss = { showMoodPopup.value = false },
-//                                    onSend = { moodId, emoji ->
-//                                        // TODO: Lógica para enviar os dados para a API de backend
-//                                        // Por enquanto, apenas fecha o pop-up
+//                                    onSend = { estadoDeHumor, emoji ->
+//                                        humorViewModel.saveUserResponse(estadoDeHumor, emoji)
 //                                        showMoodPopup.value = false
 //                                    }
 //                                )
@@ -398,14 +431,20 @@ fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel
 //                        }
 //                    }
 //                }
-//
-//                // ... o restante do seu código (DashboardCard, etc.)
 //                Spacer(modifier = Modifier.height(24.dp))
 //                DiamondLine()
 //                Spacer(modifier = Modifier.height(18.dp))
-//                DashboardCard("Avaliação Psicossocial", "psychosocial", navController)
-//                DashboardCard("Recursos de Apoio", "support", navController)
-//                DashboardCard("Gráficos Pessoais", "graphic", navController)
+//
+//                // Os DashboardCards não precisam de padding horizontal extra, pois o Box externo já tem 8dp.
+//                // Mas vamos envolver o conteúdo em um padding para alinhar com os botões acima, usando 16.dp.
+//                Column(modifier = Modifier.padding(horizontal = 8.dp)) {
+//                    DashboardCard("Avaliação Psicossocial", "psychosocial", navController)
+//                    DashboardCard("Recursos de Apoio", "support", navController)
+//                    DashboardCard("Gráficos Pessoais", "graphic", navController)
+//                }
+//
+//                // ✅ AJUSTE: Manter o espaçamento inferior grande (32dp)
+//                Spacer(modifier = Modifier.height(32.dp))
 //            }
 //        }
 //    }
