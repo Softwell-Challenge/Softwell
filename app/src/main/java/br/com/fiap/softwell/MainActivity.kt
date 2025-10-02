@@ -19,6 +19,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import br.com.fiap.softwell.model.ThemeViewModel
 import br.com.fiap.softwell.screens.AdminScreen
 import br.com.fiap.softwell.screens.GraphicScreen
+import br.com.fiap.softwell.screens.HistoricScreen
 import br.com.fiap.softwell.screens.RegisterScreen
 import br.com.fiap.softwell.service.RetrofitFactory
 import br.com.fiap.softwell.viewmodel.MoodViewModel
@@ -46,6 +47,7 @@ class MainActivity : ComponentActivity() {
                             SupportScreen(navController, activityApiService)
                         }
                         composable(route = "graphic") { GraphicScreen(navController,moodViewModel) }
+                        composable(route = "historic") { HistoricScreen(navController) }
                         composable("adminHumorScreen") { AdminScreen(navController) }
                     }
                 }
