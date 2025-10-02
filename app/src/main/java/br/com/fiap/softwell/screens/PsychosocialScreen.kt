@@ -43,7 +43,6 @@ import androidx.navigation.NavController
 import br.com.fiap.softwell.R
 import br.com.fiap.softwell.model.Communication
 import br.com.fiap.softwell.model.LeadershipRelation
-import br.com.fiap.softwell.model.PsychoSocial
 import br.com.fiap.softwell.model.RelationshipClimate
 import br.com.fiap.softwell.model.WarningSigns
 import br.com.fiap.softwell.model.Workload
@@ -53,20 +52,16 @@ import br.com.fiap.softwell.components.NumberRatingBar
 import br.com.fiap.softwell.components.Question
 import br.com.fiap.softwell.components.RatingSlider
 import br.com.fiap.softwell.components.SessionTitle
-// REMOVIDOS IMPORTS DO ROOM/LOCAL: br.com.fiap.softwell.database.dao.AppDatabase, br.com.fiap.softwell.database.repository.PsychoSocialRepository
-// O modelo antigo PsychoSocial (do Room) foi substituído pelos DTOs de API:
-import br.com.fiap.softwell.model.* // IMPORTA TODOS OS NOVOS DTOs (PsychoSocial, Workload, etc.)
-import br.com.fiap.softwell.service.RetrofitFactory // Novo import para o serviço de API
+import br.com.fiap.softwell.model.* import br.com.fiap.softwell.service.RetrofitFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.UUID // Para gerar um ID de usuário temporário para teste
+// import java.util.UUID // Não necessário se usar um ID fixo/autenticado
 
-// FUNÇÃO AUXILIAR: Substitua esta função pela sua lógica real de autenticação!
+// FUNÇÃO AUXILIAR: MANTIDA - Deve ser substituída pela sua lógica real de autenticação!
 fun getUserIdFromAuth(): String {
-    // Exemplo: Retorna um ID de usuário fixo ou obtido de SharedPreferences/AuthManager
-    return "iago_user_1234" // ID fixo ou obtido do sistema de login
-    // return UUID.randomUUID().toString() // Ou um novo UUID se o usuário for "anônimo" a cada sessão
+    // Retorna um ID de usuário fixo para teste ou obtido de SharedPreferences/AuthManager
+    return "iago_user_1234"
 }
 
 @Composable
@@ -74,13 +69,8 @@ fun PsychosocialScreen(navController: NavController) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
 
-    // NOVO: Inicializa o serviço de API para comunicação com o backend Java
+    // Inicializa o serviço de API
     val psychoSocialApiService = remember { RetrofitFactory.getPsychoSocialService() }
-
-    // REMOVIDOS: Repositório e DAO de Room (o salvamento será via API)
-    // val psychoSocialRepository = PsychoSocialRepository(context)
-    // val db = remember { AppDatabase.getDatabase(context) }
-    // val psychoSocialDao = db.psychoSocialDao()
 
     val diagonalGradient = Brush.linearGradient(
         colors = listOf(
@@ -153,21 +143,32 @@ fun PsychosocialScreen(navController: NavController) {
 
                 if (response.isSuccessful) {
                     Log.i("API_SUBMIT", "Dados psicossociais enviados com sucesso! Resposta: ${response.body()}")
-                    // Navega de volta ou mostra uma mensagem de sucesso
-                    navController.popBackStack()
+
+                    // ✅ AÇÃO CORRIGIDA: Voltar para o Dashboard na Main Thread
+                    CoroutineScope(Dispatchers.Main).launch {
+                        // Navega para a tela 'dashboard'
+                        navController.navigate("dashboard") {
+                            // Limpa a pilha de navegação para que o usuário não volte
+                            // para o questionário com o botão 'Voltar' do Android.
+                            popUpTo(navController.graph.startDestinationId) {
+                                inclusive = false
+                            }
+                            launchSingleTop = true
+                        }
+                    }
                 } else {
                     val errorBody = response.errorBody()?.string() ?: "Erro desconhecido"
                     Log.e("API_SUBMIT", "Falha no envio. HTTP ${response.code()}. Erro: $errorBody")
-                    // Exibir Snackbar de erro ao usuário
+                    // TODO: Exibir Snackbar de erro ao usuário (deve ser feito em Dispatchers.Main)
                 }
             } catch (e: Exception) {
                 Log.e("API_SUBMIT", "Exceção de conexão/IO: ${e.message}", e)
-                // Exibir Snackbar de erro de conexão ao usuário
+                // TODO: Exibir Snackbar de erro de conexão ao usuário (deve ser feito em Dispatchers.Main)
             }
         }
     }
 
-    // --- UI (Conteúdo da tela MANTIDO, exceto o botão) ---
+    // --- UI (Conteúdo da tela) ---
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -354,7 +355,7 @@ fun PsychosocialScreen(navController: NavController) {
                 )
                 Button(
                     onClick = {
-                        // NOVO: Chama a função de envio para a API
+                        // Chama a função de envio para a API
                         handleSubmit()
                     },
                     modifier = Modifier
@@ -377,9 +378,9 @@ fun PsychosocialScreen(navController: NavController) {
 }
 
 
-
 //package br.com.fiap.softwell.screens
 //
+//import android.util.Log
 //import androidx.compose.foundation.background
 //import androidx.compose.foundation.clickable
 //import androidx.compose.foundation.layout.Arrangement
@@ -420,27 +421,46 @@ fun PsychosocialScreen(navController: NavController) {
 //import androidx.compose.ui.unit.sp
 //import androidx.navigation.NavController
 //import br.com.fiap.softwell.R
+//import br.com.fiap.softwell.model.Communication
+//import br.com.fiap.softwell.model.LeadershipRelation
+//import br.com.fiap.softwell.model.PsychoSocial
+//import br.com.fiap.softwell.model.RelationshipClimate
+//import br.com.fiap.softwell.model.WarningSigns
+//import br.com.fiap.softwell.model.Workload
 //import br.com.fiap.softwell.components.CustomDropdown
 //import br.com.fiap.softwell.components.DiamondLine
 //import br.com.fiap.softwell.components.NumberRatingBar
 //import br.com.fiap.softwell.components.Question
 //import br.com.fiap.softwell.components.RatingSlider
 //import br.com.fiap.softwell.components.SessionTitle
-//import br.com.fiap.softwell.database.dao.AppDatabase
-//import br.com.fiap.softwell.database.repository.PsychoSocialRepository
-//import br.com.fiap.softwell.model.PsychoSocial
-//import br.com.fiap.softwell.model.UserMood
+//// REMOVIDOS IMPORTS DO ROOM/LOCAL: br.com.fiap.softwell.database.dao.AppDatabase, br.com.fiap.softwell.database.repository.PsychoSocialRepository
+//// O modelo antigo PsychoSocial (do Room) foi substituído pelos DTOs de API:
+//import br.com.fiap.softwell.model.* // IMPORTA TODOS OS NOVOS DTOs (PsychoSocial, Workload, etc.)
+//import br.com.fiap.softwell.service.RetrofitFactory // Novo import para o serviço de API
 //import kotlinx.coroutines.CoroutineScope
 //import kotlinx.coroutines.Dispatchers
 //import kotlinx.coroutines.launch
+//import java.util.UUID // Para gerar um ID de usuário temporário para teste
+//
+//// FUNÇÃO AUXILIAR: Substitua esta função pela sua lógica real de autenticação!
+//fun getUserIdFromAuth(): String {
+//    // Exemplo: Retorna um ID de usuário fixo ou obtido de SharedPreferences/AuthManager
+//    return "iago_user_1234" // ID fixo ou obtido do sistema de login
+//    // return UUID.randomUUID().toString() // Ou um novo UUID se o usuário for "anônimo" a cada sessão
+//}
 //
 //@Composable
 //fun PsychosocialScreen(navController: NavController) {
 //    val scrollState = rememberScrollState()
 //    val context = LocalContext.current
-//    val psychoSocialRepository = PsychoSocialRepository(context)
-//    val db = remember { AppDatabase.getDatabase(context) }
-//    val psychoSocialDao = db.psychoSocialDao()
+//
+//    // NOVO: Inicializa o serviço de API para comunicação com o backend Java
+//    val psychoSocialApiService = remember { RetrofitFactory.getPsychoSocialService() }
+//
+//    // REMOVIDOS: Repositório e DAO de Room (o salvamento será via API)
+//    // val psychoSocialRepository = PsychoSocialRepository(context)
+//    // val db = remember { AppDatabase.getDatabase(context) }
+//    // val psychoSocialDao = db.psychoSocialDao()
 //
 //    val diagonalGradient = Brush.linearGradient(
 //        colors = listOf(
@@ -452,7 +472,7 @@ fun PsychosocialScreen(navController: NavController) {
 //        end = Offset(1000f, 1000f)
 //    )
 //
-//    // Estados para cada pergunta
+//    // --- ESTADOS DA TELA (MANTIDOS) ---
 //    var workloadAssessment by remember { mutableStateOf("") }
 //    var qualityOfLifeImpact by remember { mutableStateOf("") }
 //    var extraHours by remember { mutableStateOf("") }
@@ -478,6 +498,56 @@ fun PsychosocialScreen(navController: NavController) {
 //    var leaderRecognizesEfforts by rememberSaveable { mutableStateOf(3f) }
 //    var trustAndTransparency by rememberSaveable { mutableStateOf(3f) }
 //
+//    // --- FUNÇÃO DE ENVIO PARA O BACKEND ---
+//    fun handleSubmit() {
+//        val userId = getUserIdFromAuth()
+//        Log.d("API_SUBMIT", "Coletando dados para envio do UserId: $userId")
+//
+//        // 1. Criar os DTOs aninhados (sub-modelos)
+//        val workloadData = Workload(workloadAssessment, qualityOfLifeImpact, extraHours)
+//        val warningSignsData = WarningSigns(warningSigns, mentalHealthImpact)
+//        val relationshipClimateData = RelationshipClimate(
+//            bossRating, coworkerRating, coworkerRespect, teamRelationship,
+//            freedomSpeech, welcomedPart, cooperationSpirit
+//        )
+//        val communicationData = Communication(taskClarity, openCommunication, infoFlow, goalClarity)
+//        val leadershipRelationData = LeadershipRelation(
+//            leaderCaresWellbeing, leaderIsAvailable, comfortableReportingIssues,
+//            leaderRecognizesEfforts, trustAndTransparency
+//        )
+//
+//        // 2. Criar o DTO principal (incluindo o userId)
+//        val psychosocialData = PsychoSocial(
+//            userId = userId,
+//            workload = workloadData,
+//            warningSigns = warningSignsData,
+//            relationshipClimate = relationshipClimateData,
+//            communication = communicationData,
+//            leadershipRelation = leadershipRelationData
+//        )
+//
+//        // 3. Enviar via Retrofit em uma Coroutine (I/O thread)
+//        CoroutineScope(Dispatchers.IO).launch {
+//            try {
+//                val response = psychoSocialApiService.submitAnswers(psychosocialData)
+//
+//                if (response.isSuccessful) {
+//                    Log.i("API_SUBMIT", "Dados psicossociais enviados com sucesso! Resposta: ${response.body()}")
+//                    // Navega de volta ou mostra uma mensagem de sucesso
+//                    navController.popBackStack()
+//                } else {
+//                    val errorBody = response.errorBody()?.string() ?: "Erro desconhecido"
+//                    Log.e("API_SUBMIT", "Falha no envio. HTTP ${response.code()}. Erro: $errorBody")
+//                    // Exibir Snackbar de erro ao usuário
+//                }
+//            } catch (e: Exception) {
+//                Log.e("API_SUBMIT", "Exceção de conexão/IO: ${e.message}", e)
+//                // Exibir Snackbar de erro de conexão ao usuário
+//            }
+//        }
+//    }
+//
+//    // --- UI (Conteúdo da tela MANTIDO, exceto o botão) ---
 //    Box(
 //        modifier = Modifier
 //            .fillMaxSize()
@@ -664,31 +734,8 @@ fun PsychosocialScreen(navController: NavController) {
 //                )
 //                Button(
 //                    onClick = {
-//                        val psychosocial = PsychoSocial(
-//                            id = 0,
-//                            workloadAssessment,
-//                            qualityOfLifeImpact,
-//                            extraHours,
-//                            warningSigns,
-//                            mentalHealthImpact,
-//                            bossRating,
-//                            coworkerRating,
-//                            coworkerRespect,
-//                            teamRelationship,
-//                            freedomSpeech,
-//                            welcomedPart,
-//                            cooperationSpirit,
-//                            taskClarity,
-//                            openCommunication,
-//                            infoFlow,
-//                            goalClarity,
-//                            leaderCaresWellbeing,
-//                            comfortableReportingIssues,
-//                            leaderRecognizesEfforts,
-//                            trustAndTransparency
-//                        )
-//                        psychoSocialRepository.salvar(psychosocial)
-//
+//                        // NOVO: Chama a função de envio para a API
+//                        handleSubmit()
 //                    },
 //                    modifier = Modifier
 //                        .fillMaxWidth()
