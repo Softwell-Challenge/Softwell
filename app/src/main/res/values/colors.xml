@@ -11,10 +11,12 @@
     <!-- Tema Claro -->
     <color name="primary">#D9EFEC</color>
     <color name="secondary">#141E24</color>
-    <color name="light_blue">#00F0D4</color>
+    <color name="light_blue">#2AB8AB</color>
     <color name="blue">#0496FF</color>
     <color name="light_green">#A8F00E</color>
     <color name="bg_dark">#28292E</color>
     <color name="bg_middle">#2D2D47</color>
     <color name="bg_light">#423B9C</color>
 </resources>
+
+<!--<color name="light_blue">#00F0D4</color>-->
