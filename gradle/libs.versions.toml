@@ -32,6 +32,10 @@ uiGraphics = "1.8.3"
 # MPAndroidChart
 mpAndroidChart = "3.1.0"
 
+# Moshi e MoshiConverter
+moshi = "1.15.1"
+moshiConverter = "2.11.0"
+
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -73,6 +77,11 @@ ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics", version.ref
 
 # MpAndroidChart
 mpAndroidChart = { module = "com.github.PhilJay:MPAndroidChart", version.ref = "mpAndroidChart" }
+
+#Moshi
+converter-moshi = { group = "com.squareup.retrofit2", name = "converter-moshi", version.ref = "moshiConverter" }
+moshi = { group = "com.squareup.moshi", name = "moshi", version.ref = "moshi" }
+moshi-kotlin-codegen = { group = "com.squareup.moshi", name = "moshi-kotlin-codegen", version.ref = "moshi" }
 
 
 [plugins]

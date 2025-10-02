@@ -43,12 +43,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import br.com.fiap.softwell.R
 import br.com.fiap.softwell.database.dao.AppDatabase
-import br.com.fiap.softwell.database.repository.PsychoSocialRepository
 import br.com.fiap.softwell.database.repository.UserMoodRepository
 import br.com.fiap.softwell.model.Mood
-import br.com.fiap.softwell.model.MoodViewModel
-import br.com.fiap.softwell.model.PsychoSocial
 import br.com.fiap.softwell.model.UserMood
+import br.com.fiap.softwell.viewmodel.MoodViewModel
 
 @Composable
 fun GraphicScreen(navController: NavController,moodViewModel: MoodViewModel) {
@@ -57,14 +55,6 @@ fun GraphicScreen(navController: NavController,moodViewModel: MoodViewModel) {
     val context = LocalContext.current
     val moodOptionRepository = UserMoodRepository(context)
     val db = remember { AppDatabase.getDatabase(context) }
-    val userMoodDao = db.userMoodDao()
-    val psychoRepository = PsychoSocialRepository(context)
-    val listarPsyco = remember {
-        mutableStateOf(psychoRepository.listPsychoSocial())
-    }
-    val listarMood = remember {
-        mutableStateOf(moodOptionRepository.listUserMood())
-    }
 
     val apiMoods by moodViewModel.moods.collectAsStateWithLifecycle()
     val isLoading by moodViewModel.isLoading.collectAsStateWithLifecycle()
@@ -106,10 +96,6 @@ fun GraphicScreen(navController: NavController,moodViewModel: MoodViewModel) {
                     )
                 }
             }
-            Text("Dados Psicossociais (Banco Local)", modifier = Modifier.padding(16.dp), fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            psychoList(listarPsyco)
-            Text("Humores Salvos (Banco Local)", modifier = Modifier.padding(16.dp), fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            moodList(listarMood)
             Text("Humores da API", modifier = Modifier.padding(16.dp), fontSize = 20.sp, fontWeight = FontWeight.Bold)
             if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally as Alignment))
@@ -136,20 +122,7 @@ fun moodList(listarMood: MutableState<List<UserMood>>) {
 
     }
 }
-@Composable
-fun psychoList(listarPsyco: MutableState<List<PsychoSocial>>) {
-    Column (
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState())
-    ){
-        for (psycho in listarPsyco.value){
-            cardPsycho(psycho)
-            Spacer(modifier = Modifier.height(4.dp))
-        }
-    }
-}
+
 @Composable
 fun cardMood(mood: UserMood) {
     Card (
@@ -180,42 +153,6 @@ fun cardMood(mood: UserMood) {
         }
     }
 }
-@Composable
-fun cardPsycho(psycho: PsychoSocial){
-    Card (
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.LightGray
-        )
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ){
-            Column (
-                modifier = Modifier
-                    .padding(8.dp)
-                    .weight(2f)
-            ){
-                Text(
-                    text = psycho.workloadAssessment,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = psycho.qualityOfLifeImpact,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
-                )
-//                Text(
-//                    text = mood.timestamp,
-//                    fontSize = 24.sp,
-//                    fontWeight = FontWeight.Bold
-//                )
-
-            }
-        }
-    }
-}
 
 // ---------- NOVO COMPOSABLE PARA A LISTA DA API ----------
 @Composable
@@ -235,7 +172,6 @@ fun ApiMoodList(moods: List<Mood>) {
         }
     }
 }
-
 
 // ---------- NOVO CARD PARA O TIPO 'Mood' DA API ----------
 @Composable

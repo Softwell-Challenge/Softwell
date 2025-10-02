@@ -83,12 +83,15 @@ dependencies {
     // Dependência do MPAndroidChart
     implementation(libs.mpAndroidChart)
 
-    dependencies {
-        // ... outras dependências como core-ktx, material3, etc.
+    // Dependencia Moshi
+    implementation(libs.converter.moshi)
+    implementation(libs.moshi)
+    kapt(libs.moshi.kotlin.codegen)
 
-        // Dependências do ViewModel e Lifecycle
-        implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.1")
-        implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.1") // <-- ESSA É A CHAVE!
-    }
+    // ... outras dependências como core-ktx, material3, etc.
+    // Dependências do ViewModel e Lifecycle
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.1") // <-- ESSA É A CHAVE!
+
 
 }
