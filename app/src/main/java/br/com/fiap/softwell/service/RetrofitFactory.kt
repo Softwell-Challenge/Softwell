@@ -20,4 +20,9 @@ object RetrofitFactory {
     fun getActivityService(): ActivityApiService {
         return retrofitFactory.create(ActivityApiService::class.java)
     }
+
+    // NOVO: Método para obter o serviço de Respostas Psicossociais
+    fun getPsychoSocialService(): PsychoSocialApiService {
+        return retrofitFactory.create(PsychoSocialApiService::class.java)
+    }
 }
