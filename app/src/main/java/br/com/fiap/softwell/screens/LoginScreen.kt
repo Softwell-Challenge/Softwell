@@ -42,8 +42,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import br.com.fiap.softwell.R
+import br.com.fiap.softwell.model.LoginRequest
+import br.com.fiap.softwell.model.LoginResponse
+import br.com.fiap.softwell.service.AuthService
 import br.com.fiap.softwell.ui.theme.Rubik
 import br.com.fiap.softwell.ui.theme.Sora
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 @Composable
 fun LoginScreen(navController: NavController) {
@@ -124,27 +132,6 @@ fun LoginScreen(navController: NavController) {
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Input CPF
-                TextField(
-                    value = cpfText,
-                    onValueChange = { cpfText = it },
-                    label = { Text("CPF", color = colorResource(id = R.color.light_blue)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedLabelColor = colorResource(id = R.color.light_blue),
-                        focusedLabelColor = colorResource(id = R.color.primary),
-                        cursorColor = colorResource(id = R.color.primary),
-                        focusedIndicatorColor = colorResource(id = R.color.primary),
-                        unfocusedIndicatorColor = colorResource(id = R.color.light_blue),
-                        focusedTextColor = colorResource(id = R.color.primary),
-                        unfocusedTextColor = colorResource(id = R.color.primary)
-                    ),
-                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-
                 // Input Senha
                 TextField(
                     value = senhaText,
@@ -169,7 +156,7 @@ fun LoginScreen(navController: NavController) {
             // --- FIM DOS INPUTS ---
 
             Button(
-                onClick = { navController.navigate("dashboard") },
+                onClick = { login(usernameText, senhaText, navController) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
@@ -219,4 +206,32 @@ fun LoginScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
+}
+fun login(username: String, password: String, navController: NavController) {
+    val retrofit = Retrofit.Builder()
+        .baseUrl("http://10.0.2.2:8080")
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+
+    val service = retrofit.create(AuthService::class.java)
+    val call = service.login(LoginRequest(username, password))
+
+    call.enqueue(object : Callback<LoginResponse> {
+        override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
+            if (response.isSuccessful) {
+                val token = response.body()?.token
+                println("Login bem-sucedido! Token: $token")
+                // Salve o token e navegue para a próxima tela
+                navController.navigate("dashboard")
+            } else {
+                // Trate erro de login
+                println("Erro no login: ${response.code()}")
+            }
+        }
+
+        override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
+            // Trate erro de rede
+            println("Falha na requisição: ${t.message}")
+        }
+    })
 }
