@@ -1,9 +1,11 @@
 package br.com.fiap.softwell.screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,17 +13,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-// IMPORTAÇÃO CHAVE PARA CORRIGIR O LAYOUT QUEBRADO
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TextButton // Importado para um estilo de link
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,10 +48,12 @@ import br.com.fiap.softwell.ui.theme.Rubik
 import br.com.fiap.softwell.ui.theme.Sora
 
 @Composable
-fun LoginScreen(navController: NavController) {
+fun RegisterScreen(navController: NavController) {
+    // ESTADOS
     var usernameText by remember { mutableStateOf("") }
     var cpfText by remember { mutableStateOf("") }
     var senhaText by remember { mutableStateOf("") }
+    var isAdmin by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
 
@@ -59,7 +63,7 @@ fun LoginScreen(navController: NavController) {
     ) {
         Image(
             painter = painterResource(id = R.drawable.fundo_login),
-            contentDescription = "Fundo da tela de Login",
+            contentDescription = "Fundo da tela de Registro",
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
@@ -80,29 +84,32 @@ fun LoginScreen(navController: NavController) {
                 contentScale = ContentScale.Crop
             )
             Spacer(modifier = Modifier.height(0.dp))
+
             Text(
-                text = "Seu bem-estar importa",
+                text = "Crie sua Conta",
                 fontSize = 24.sp,
                 fontFamily = Rubik,
                 fontWeight = FontWeight.ExtraBold,
                 textAlign = TextAlign.Center,
                 color = colorResource(id = R.color.primary),
             )
-            Image(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(10.dp)
-                    .offset(y = (-10).dp)
-                    .padding(end = 24.dp),
-                painter = painterResource(id = R.drawable.triangle_arrow),
-                contentDescription = null,
-                contentScale = ContentScale.FillWidth
+            Text(
+                text = "É rápido e simples.",
+                fontSize = 18.sp,
+                fontFamily = Sora,
+                fontWeight = FontWeight.Normal,
+                textAlign = TextAlign.Center,
+                color = colorResource(id = R.color.primary),
             )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             // --- INPUTS ---
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp, vertical = 24.dp)
+                    .padding(horizontal = 32.dp),
+                horizontalAlignment = Alignment.Start
             ) {
                 // Input USERNAME
                 TextField(
@@ -165,11 +172,41 @@ fun LoginScreen(navController: NavController) {
                     ),
                     modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                 )
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // --- SELETOR DE ADMIN (CHECKBOX) ---
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { isAdmin = !isAdmin } // Torna a linha clicável
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    Checkbox(
+                        checked = isAdmin,
+                        onCheckedChange = { isAdmin = it },
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = colorResource(id = R.color.blue),
+                            uncheckedColor = colorResource(id = R.color.light_blue)
+                        )
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Sou Administrador",
+                        color = colorResource(id = R.color.primary),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Normal
+                    )
+                }
             }
             // --- FIM DOS INPUTS ---
 
+            Spacer(modifier = Modifier.height(24.dp))
+
             Button(
-                onClick = { navController.navigate("dashboard") },
+                // TODO: Defina a rota de sucesso após o registro, ex: navController.navigate("home_screen")
+                onClick = { /* Lógica de registro */ },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
@@ -178,31 +215,34 @@ fun LoginScreen(navController: NavController) {
                 colors = ButtonDefaults.buttonColors(colorResource(id = R.color.blue))
             ) {
                 Text(
-                    text = "ACESSAR",
+                    text = "CRIAR CONTA",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     color = colorResource(id = R.color.primary)
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp)) // Espaço reduzido
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // NOVO BOTÃO DE REGISTRAR-SE (SUBSTITUI "Esqueci minha senha")
-            TextButton(
-                onClick = {navController.navigate("register")},
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)
+            // Botão para voltar à tela de Login
+            Button(
+                onClick = { navController.popBackStack() }, // Volta para a tela anterior (Login)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .padding(horizontal = 32.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
             ) {
                 Text(
-                    text = "REGISTRAR-SE",
+                    text = "Fazer login",
                     fontSize = 14.sp,
                     fontFamily = Sora,
-                    fontWeight = FontWeight.Bold, // Use Bold para um botão
+                    fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
                     color = colorResource(id = R.color.primary),
                 )
             }
-
-            Spacer(modifier = Modifier.height(8.dp)) // Espaço para separar do diamond line
 
             // Ajusta o offset para evitar que a linha "caia" na rolagem
             Image(
