@@ -35,6 +35,7 @@ mpAndroidChart = "3.1.0"
 # Moshi e MoshiConverter
 moshi = "1.15.1"
 moshiConverter = "2.11.0"
+foundation = "1.9.2"
 
 
 [libraries]
@@ -82,6 +83,7 @@ mpAndroidChart = { module = "com.github.PhilJay:MPAndroidChart", version.ref = "
 converter-moshi = { group = "com.squareup.retrofit2", name = "converter-moshi", version.ref = "moshiConverter" }
 moshi = { group = "com.squareup.moshi", name = "moshi", version.ref = "moshi" }
 moshi-kotlin-codegen = { group = "com.squareup.moshi", name = "moshi-kotlin-codegen", version.ref = "moshi" }
+androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 
 
 [plugins]

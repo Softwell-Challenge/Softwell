@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.ui.graphics)
+    implementation(libs.androidx.foundation)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -88,10 +89,14 @@ dependencies {
     implementation(libs.moshi)
     kapt(libs.moshi.kotlin.codegen)
 
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.ui)
+
     // ... outras dependências como core-ktx, material3, etc.
     // Dependências do ViewModel e Lifecycle
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.1")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.1") // <-- ESSA É A CHAVE!
+
 
 
 }
