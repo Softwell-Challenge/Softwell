@@ -37,7 +37,7 @@ interface ActivityApiService {
 
     // POST /act/vote
     // Registra o voto do usuário na segunda collection (vote_record).
-    @POST("act/vote")
-    suspend fun registerVote(@Body vote: ActivityVoteDTO): Response<Void>
+    @POST("act/choice")
+    suspend fun registerVote(@Body vote: ActivityVoteDTO): Response<ActivityVoteDTO>
     // Retorna Response<Void> ou Response<ActivityVoteDTO> se o servidor retornar algo.
 }

@@ -63,42 +63,50 @@ class UserActivityViewModel(
 
     fun registrarVoto(activityId: String) {
         viewModelScope.launch {
-            _activityState.value = UserActivityState.Loading
+            // Não altere o estado de _activityState para Loading aqui,
+            // para não piscar a tela inteira. O feedback será dado pelo _voteFeedbackState.
 
             try {
                 val voteDTO = ActivityVoteDTO(activityId = activityId)
-                apiService.registerVote(voteDTO)
+                // 1. CAPTURE A RESPOSTA COMPLETA
+                val response = apiService.registerVote(voteDTO)
 
-                // 1. SUCESSO
-                _voteFeedbackState.value = VoteFeedbackState.VotedSuccessfully
-                Log.d("Voto", "Voto registrado com sucesso para o ID: $activityId")
+                // 2. VERIFIQUE SE A RESPOSTA FOI BEM-SUCEDIDA (CÓDIGO 2xx)
+                if (response.isSuccessful) {
+                    // SUCESSO REAL
+                    _voteFeedbackState.value = VoteFeedbackState.VotedSuccessfully
+                    Log.d("Voto", "Voto registrado com sucesso para o ID: $activityId")
 
-            } catch (e: HttpException) {
-                // 2. TRATAMENTO DE ERRO HTTP (INCLUINDO 403 COOLDOWN)
-                val errorBodyString = e.response()?.errorBody()?.string() ?: e.message()
-                val errorMessage = errorBodyString.trim()
-
-                if (e.code() == 403 && errorMessage.contains("Você só pode fazer uma nova escolha daqui a")) {
-                    _voteFeedbackState.value = VoteFeedbackState.VoteLimitReached(errorMessage)
-                    Log.w("Voto", "Voto bloqueado por cooldown: $errorMessage")
                 } else {
-                    _voteFeedbackState.value = VoteFeedbackState.Error("Erro HTTP ${e.code()}: Falha ao registrar voto.")
-                    Log.e("Voto", "Erro HTTP: ${e.code()} - $errorMessage")
+                    // 3. ERRO HTTP (A API RESPONDEU, MAS COM ERRO)
+                    // O código entra aqui para erros como 403, 404, 500, etc.
+                    val errorCode = response.code()
+                    val errorBody = response.errorBody()?.string() ?: "Erro desconhecido"
+
+                    if (errorCode == 400 && errorBody.contains("Você só pode fazer uma nova escolha daqui a")) {
+                        _voteFeedbackState.value = VoteFeedbackState.VoteLimitReached(errorBody)
+                        Log.w("Voto", "Voto bloqueado por cooldown: $errorBody")
+                    } else {
+                        _voteFeedbackState.value = VoteFeedbackState.Error("Erro HTTP $errorCode: Falha ao registrar voto.")
+                        Log.e("Voto", "Erro HTTP: $errorCode - $errorBody")
+                    }
                 }
+
             } catch (e: IOException) {
-                // 3. TRATAMENTO DE ERRO DE REDE
+                // ERRO DE REDE (Sem conexão)
                 _voteFeedbackState.value = VoteFeedbackState.Error("Falha na conexão ao registrar voto.")
-                Log.e("Voto", "Falha de rede: ${e.message}")
+                Log.e("Voto", "Falha de rede: ${e.message}", e)
             } catch (e: Exception) {
-                // 4. TRATAMENTO DE ERRO GERAL
+                // OUTROS ERROS (Ex: Problema de parsing do JSON)
                 _voteFeedbackState.value = VoteFeedbackState.Error("Erro desconhecido ao votar: ${e.message}")
-                Log.e("Voto", "Erro desconhecido: ${e.message}")
+                Log.e("Voto", "Erro desconhecido: ${e.message}", e)
             } finally {
-                // 5. GARANTIA: Recarrega as atividades para sair do Loading
+                // GARANTIA: Recarrega as atividades para atualizar a UI (seja após sucesso ou erro)
                 fetchActivities()
             }
         }
     }
+
 
     fun resetVoteState() {
         _voteFeedbackState.value = VoteFeedbackState.Idle
