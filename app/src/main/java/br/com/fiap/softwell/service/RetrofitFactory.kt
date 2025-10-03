@@ -5,44 +5,43 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
+
+// ... (imports)
+
 object RetrofitFactory {
 
-    // URL base da sua API
     private const val BASE_URL = "http://10.0.2.2:8080/"
 
-    // 2. Cria um cliente OkHttp com o interceptor de autenticação
+    // ... (okHttpClient e instância do retrofit) ...
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor { chain ->
-            // Recupera o token PURO que foi salvo no AuthTokenManager
             val token = AuthTokenManager.getToken()
             val originalRequest = chain.request()
-
-            // Cria uma nova requisição adicionando o cabeçalho de autorização
             val newRequest = if (token != null) {
                 originalRequest.newBuilder()
-                    // ✅ CORREÇÃO: Adicionar o prefixo "Bearer " aqui
                     .header("Authorization", "Bearer $token")
                     .build()
             } else {
-                // Se não houver token, envia a requisição original (para telas de login/cadastro)
                 originalRequest
             }
-            // Continua a chamada com a nova requisição (que agora tem o token)
             chain.proceed(newRequest)
         }
         .build()
 
-    // 3. Cria a instância principal do Retrofit
     private val retrofit = Retrofit.Builder()
         .baseUrl(BASE_URL)
-        .client(okHttpClient) // <-- IMPORTANTE: Usa o cliente com o interceptor de autenticação
+        .client(okHttpClient)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
+
     // --- MÉTODOS PARA OBTER CADA SERVIÇO ---
 
-    fun getMoodService(): MoodService {
-        return retrofit.create(MoodService::class.java)
+    // ✅✅✅ CORREÇÃO PRINCIPAL AQUI ✅✅✅
+    // O nome do método deve retornar a interface "HumorApiService", não "MoodService".
+    // Dentro de RetrofitFactory.kt
+    fun getMoodService(): HumorApiService {
+        return retrofit.create(HumorApiService::class.java)
     }
 
     fun getActivityService(): ActivityApiService {
@@ -57,6 +56,7 @@ object RetrofitFactory {
         return retrofit.create(AuthService::class.java)
     }
 }
+
 
 
 

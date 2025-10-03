@@ -69,10 +69,20 @@ fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel
     val humorDataState by humorViewModel.humorDataState.collectAsState()
     val showMoodPopup = remember { mutableStateOf(false) }
 
-    // ✅ 2. VERIFICAR SE O USUÁRIO É ADMIN
-    // Usamos 'remember' para que a verificação seja feita apenas uma vez.
     val isAdmin = remember { AuthTokenManager.isUserAdmin() }
 
+    // ✅ COLETAR OS NOVOS ESTADOS DO VIEWMODEL
+    val isSubmissionAllowed by humorViewModel.isSubmissionAllowed.collectAsState()
+    val submissionStatusText by humorViewModel.submissionStatusText.collectAsState()
+
+    // ✅ VERIFICAR O STATUS SEMPRE QUE O POPUP FOR ABERTO
+    LaunchedEffect(showMoodPopup.value) {
+        if (showMoodPopup.value) {
+            humorViewModel.checkSubmissionStatus()
+        }
+    }
+
+    // O LaunchedEffect para buscar os dados de humor pode ser unido, mas separado funciona bem.
     LaunchedEffect(Unit) {
         humorViewModel.fetchHumorData()
     }
@@ -108,7 +118,7 @@ fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel
                     .fillMaxSize()
                     .verticalScroll(scrollState)
             ) {
-                // ... seu cabeçalho e título ...
+                // Cabeçalho e Título
                 Spacer(modifier = Modifier.height(30.dp))
                 Row(
                     modifier = Modifier
@@ -182,10 +192,9 @@ fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel
                                     )
                                 }
 
-                                // ✅ 3. CONTROLE DE VISIBILIDADE PARA O PAINEL DE ADMIN
                                 if (isAdmin) {
                                     Button(
-                                        onClick = { navController.navigate("adminHumorScreen") }, // Supondo que o nome da rota seja este
+                                        onClick = { navController.navigate("adminHumorScreen") },
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(horizontal = 16.dp, vertical = 0.dp),
@@ -202,13 +211,18 @@ fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel
                             }
 
                             if (showMoodPopup.value) {
+                                // ✅ ATUALIZE A CHAMADA DO HumorPopup
                                 HumorPopup(
                                     humorDataList = state.data,
                                     onDismiss = { showMoodPopup.value = false },
                                     onSend = { estadoDeHumor, emoji ->
                                         humorViewModel.saveUserResponse(estadoDeHumor, emoji)
-                                        showMoodPopup.value = false
-                                    }
+                                        // Opcional: manter o popup aberto para ver a mudança no botão
+                                        // showMoodPopup.value = false
+                                    },
+                                    // Passa os novos parâmetros para o popup
+                                    isSendButtonEnabled = isSubmissionAllowed,
+                                    buttonText = submissionStatusText
                                 )
                             }
                         }
@@ -227,7 +241,6 @@ fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel
                     DashboardCard("Recursos de Apoio", "support", navController)
                     DashboardCard("Gráficos Pessoais", "graphic", navController)
 
-                    // ✅ 4. CONTROLE DE VISIBILIDADE PARA O HISTÓRICO
                     if (isAdmin) {
                         DashboardCard("Histórico de Respostas", "historic", navController)
                     }
