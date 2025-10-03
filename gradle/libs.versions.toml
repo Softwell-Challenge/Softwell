@@ -36,6 +36,7 @@ mpAndroidChart = "3.1.0"
 moshi = "1.15.1"
 moshiConverter = "2.11.0"
 foundation = "1.9.2"
+inkBrush = "1.0.0-alpha06"
 
 
 [libraries]
@@ -85,6 +86,7 @@ converter-moshi = { group = "com.squareup.retrofit2", name = "converter-moshi", 
 moshi = { group = "com.squareup.moshi", name = "moshi", version.ref = "moshi" }
 moshi-kotlin-codegen = { group = "com.squareup.moshi", name = "moshi-kotlin-codegen", version.ref = "moshi" }
 androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
+androidx-ink-brush = { group = "androidx.ink", name = "ink-brush", version.ref = "inkBrush" }
 
 
 [plugins]
