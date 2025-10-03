@@ -98,6 +98,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.1")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.1") // <-- ESSA É A CHAVE!
 
-
+    // Dependencia Auth0.JWT
+    implementation("com.auth0.android:jwtdecode:2.0.2")
 
 }

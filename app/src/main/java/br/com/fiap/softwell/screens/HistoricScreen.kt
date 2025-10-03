@@ -2,31 +2,18 @@ package br.com.fiap.softwell.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -34,25 +21,25 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import br.com.fiap.softwell.R
 import br.com.fiap.softwell.components.DiamondLine
 import br.com.fiap.softwell.components.SessionTitle
+import br.com.fiap.softwell.model.ThematicAverages
 import br.com.fiap.softwell.ui.theme.Sora
+import br.com.fiap.softwell.viewmodel.HistoricState
+import br.com.fiap.softwell.viewmodel.HistoricViewModel // ✅ Verifique se esta importação não está mais vermelha
+import java.time.Instant
+import java.time.ZoneId
+import java.util.Locale
 
-// Modelo de dados de exemplo (Substitua isso pelo seu ViewModel e modelos reais)
-data class HistoricData(
-    val date: String,
-    val userName: String,
-    val mood: String, // Ex: "Alegre", "Triste"
-    val score: Int // Ex: Pontuação da avaliação psicossocial
-)
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HistoricScreen(navController: NavController) {
-    val scrollState = rememberScrollState()
-
-    // 🚀 NOVO: Definição do gradiente de fundo (igual à Dashboard)
+fun HistoricScreen(
+    navController: NavController,
+    historicViewModel: HistoricViewModel = viewModel() // Injeta o ViewModel
+) {
     val diagonalGradient = Brush.linearGradient(
         colors = listOf(
             colorResource(id = R.color.bg_dark),
@@ -63,59 +50,56 @@ fun HistoricScreen(navController: NavController) {
         end = Offset(1000f, 1000f)
     )
 
-    // Dados de exemplo (Substitua pela chamada ao seu ViewModel)
-    val historicDataList = listOf(
-        HistoricData("20/Set", "Alice S.", "Alegre", 85),
-        HistoricData("21/Set", "Bob M.", "Neutro", 72),
-        HistoricData("22/Set", "Carlos T.", "Triste", 55),
-        HistoricData("23/Set", "Alice S.", "Calmo", 90),
-        HistoricData("24/Set", "Daniel A.", "Ansioso", 40),
-        // Adicione mais dados conforme necessário
-    )
+    val historicState by historicViewModel.historicState.collectAsState()
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(diagonalGradient)
-    ) {
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDatePicker = false
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            val selectedDate = Instant.ofEpochMilli(millis).atZone(ZoneId.of("UTC")).toLocalDate()
+                            historicViewModel.fetchAveragesByDate(selectedDate)
+                        }
+                    }
+                ) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize().background(diagonalGradient)) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 8.dp)
-                .clip(RoundedCornerShape(0.dp))
-                .shadow(elevation = 0.dp)
                 .background(MaterialTheme.colorScheme.background),
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState)
-            ) {
+            Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                 Spacer(modifier = Modifier.height(30.dp))
 
-                // === CABEÇALHO (SETA DE VOLTAR) ===
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.Start, // Seta fica na esquerda
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clickable { navController.popBackStack() },
+                        modifier = Modifier.size(32.dp).clickable { navController.popBackStack() },
                         imageVector = Icons.Default.ArrowBack,
                         contentDescription = "Voltar",
                         tint = colorResource(id = R.color.light_green)
                     )
                 }
-
-                // === TÍTULO SOFTWELL ===
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp, bottom = 16.dp)
+                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 16.dp)
                 ) {
                     Text(
                         text = "SOFTWELL",
@@ -126,29 +110,47 @@ fun HistoricScreen(navController: NavController) {
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
-
                 DiamondLine()
 
-                // === 1. HISTÓRICO DE HUMOR ===
                 SessionTitle(
-                    text = "Histórico de Humor (Geral)",
+                    text = "Histórico Psicossocial",
                     modifier = Modifier.padding(top = 24.dp, start = 16.dp, end = 16.dp, bottom = 12.dp)
                 )
 
-                HistoricList(dataList = historicDataList)
+                Button(
+                    onClick = { showDatePicker = true },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                ) {
+                    Text("Selecionar Data para Análise")
+                }
 
                 Spacer(modifier = Modifier.height(24.dp))
-                DiamondLine()
 
-                // === 2. HISTÓRICO PSICOSSOCIAL ===
-                SessionTitle(
-                    text = "Pontuação Psicossocial",
-                    modifier = Modifier.padding(top = 24.dp, start = 16.dp, end = 16.dp, bottom = 12.dp)
-                )
-
-                // Aqui você listaria as avaliações psicossociais, usando o mesmo componente ou um adaptado
-                HistoricList(dataList = historicDataList.map { it.copy(mood = "Score", score = it.score) })
-
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .defaultMinSize(minHeight = 200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    when (val state = historicState) {
+                        is HistoricState.Idle -> {
+                            Text("Por favor, selecione uma data para ver as médias.", color = MaterialTheme.colorScheme.onSurface)
+                        }
+                        is HistoricState.Loading -> {
+                            CircularProgressIndicator()
+                        }
+                        is HistoricState.Empty -> {
+                            Text("Nenhum dado de questionário encontrado para a data selecionada.", color = MaterialTheme.colorScheme.onSurface)
+                        }
+                        is HistoricState.Error -> {
+                            Text("Erro ao carregar dados: ${state.message}", color = Color.Red)
+                        }
+                        is HistoricState.Success -> {
+                            AveragesDisplay(averages = state.averages)
+                        }
+                    }
+                }
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
@@ -156,55 +158,46 @@ fun HistoricScreen(navController: NavController) {
 }
 
 @Composable
-fun HistoricList(dataList: List<HistoricData>) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        dataList.forEach { data ->
-            HistoricItemCard(data)
-        }
+fun AveragesDisplay(averages: ThematicAverages) {
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            text = "Médias Consolidadas do Dia",
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp,
+            color = colorResource(id = R.color.light_green),
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        AverageItem("Carga de Trabalho", averages.workloadAverage)
+        AverageItem("Sinais de Alerta", averages.warningSignsAverage)
+        AverageItem("Clima e Relacionamento", averages.relationshipClimateAverage)
+        AverageItem("Comunicação", averages.communicationAverage)
+        AverageItem("Relação com Liderança", averages.leadershipRelationAverage)
     }
 }
 
 @Composable
-fun HistoricItemCard(data: HistoricData) {
+fun AverageItem(label: String, value: Double) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Data e Usuário
-            Column {
-                Text(
-                    text = data.userName,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "Data: ${data.date}",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                )
-            }
-
-            // Humor / Score
             Text(
-                text = if (data.mood == "Score") "Score: ${data.score}" else data.mood,
-                fontWeight = FontWeight.ExtraBold,
+                text = label,
                 fontSize = 16.sp,
-                color = if (data.mood == "Triste" || data.score < 60) Color.Red else colorResource(id = R.color.light_green)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = String.format(Locale.getDefault(), "%.1f", value),
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 18.sp,
+                color = colorResource(id = R.color.light_blue)
             )
         }
     }

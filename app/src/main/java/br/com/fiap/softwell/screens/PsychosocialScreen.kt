@@ -53,14 +53,12 @@ import br.com.fiap.softwell.components.NumberRatingBar
 import br.com.fiap.softwell.components.Question
 import br.com.fiap.softwell.components.RatingSlider
 import br.com.fiap.softwell.components.SessionTitle
-import br.com.fiap.softwell.model.* import br.com.fiap.softwell.service.RetrofitFactory
+import br.com.fiap.softwell.model.*
+import br.com.fiap.softwell.service.AuthTokenManager
+import br.com.fiap.softwell.service.RetrofitFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-
-fun getUserIdFromAuth(): String {
-    return "iago_user_1234"
-}
 
 @Composable
 fun PsychosocialScreen(navController: NavController) {
@@ -107,7 +105,16 @@ fun PsychosocialScreen(navController: NavController) {
 
     // --- FUNÇÃO DE ENVIO PARA O BACKEND E NAVEGAÇÃO ---
     fun handleSubmit() {
-        val userId = getUserIdFromAuth()
+        // Pega o userId REAL do token JWT salvo no AuthTokenManager.
+        val userId = AuthTokenManager.getUserIdFromToken()
+
+        // Validação: Se o userId for nulo (token inválido ou não logado), interrompe o envio.
+        if (userId == null) {
+            Log.e("API_SUBMIT", "Usuário não autenticado. Impossível enviar dados.")
+            // Você pode opcionalmente mostrar uma mensagem para o usuário ou deslogá-lo.
+            // Ex: navController.navigate("login") { popUpTo(0) }
+            return
+        }
 
         val workloadData = Workload(workloadAssessment, qualityOfLifeImpact, extraHours)
         val warningSignsData = WarningSigns(warningSigns, mentalHealthImpact)
@@ -121,6 +128,7 @@ fun PsychosocialScreen(navController: NavController) {
             leaderRecognizesEfforts, trustAndTransparency
         )
 
+        // O psychosocialData agora é criado com o userId CORRETO.
         val psychosocialData = PsychoSocial(
             userId = userId,
             workload = workloadData,
