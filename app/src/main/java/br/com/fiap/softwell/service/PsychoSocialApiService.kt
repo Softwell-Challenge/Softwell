@@ -21,10 +21,6 @@ interface PsychoSocialApiService {
     @GET("/api/psychosocial/analysis/latest-averages")
     suspend fun getLatestAverages(): Response<ThematicAverages>
 
-    // =======================================================================
-    // ✅ ADIÇÃO NECESSÁRIA PARA O HISTÓRICO FUNCIONAR
-    // Esta função estava faltando, causando o erro no HistoricViewModel.
-    // =======================================================================
     @GET("/api/psychosocial/analysis/by-date/{date}")
     suspend fun getAveragesByDate(@Path("date") date: String): Response<ThematicAverages>
 }

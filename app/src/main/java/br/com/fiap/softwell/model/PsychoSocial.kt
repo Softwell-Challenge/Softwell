@@ -2,7 +2,6 @@ package br.com.fiap.softwell.model
 
 import androidx.room.Entity
 
-// DTO Principal para envio
 @Entity(tableName = "psycho_social")
 data class PsychoSocial(
     val userId: String,

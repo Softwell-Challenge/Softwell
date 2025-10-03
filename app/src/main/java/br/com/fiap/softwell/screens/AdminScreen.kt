@@ -10,7 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.* // Importa AlertDialog, que é Material3
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,7 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow // IMPORTANTE para o ...
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -51,9 +51,6 @@ fun AdminScreen(
     navController: NavController,
     humorViewModel: HumorViewModel = viewModel()
 ) {
-    // -------------------------------------------------------------------------
-    // NOVO: Inicialização e Injeção do ViewModel de Atividades (Apoio)
-    // -------------------------------------------------------------------------
     val activityApiService: ActivityApiService = remember {
         RetrofitFactory.getActivityService()
     }
@@ -61,9 +58,6 @@ fun AdminScreen(
         factory = ActivityViewModelFactory(activityApiService)
     )
 
-    // -------------------------------------------------------------------------
-    // ESTADOS
-    // -------------------------------------------------------------------------
     var moodText by remember { mutableStateOf("") }
     var emojiText by remember { mutableStateOf("") }
     var newActivityText by remember { mutableStateOf("") }
@@ -76,9 +70,6 @@ fun AdminScreen(
     val humorDataState by humorViewModel.humorDataState.collectAsState()
     val activityDataState by activityViewModel.activityDataState.collectAsState()
 
-    // -------------------------------------------------------------------------
-    // EFEITOS (BUSCA DE DADOS)
-    // -------------------------------------------------------------------------
     LaunchedEffect(Unit) {
         humorViewModel.fetchHumorData()
         activityViewModel.fetchData()
@@ -103,16 +94,13 @@ fun AdminScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(diagonalGradient) // Aplicando o fundo gradiente
+            .background(diagonalGradient)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                // ✅ AJUSTE: Aplicando padding horizontal e removendo vertical
                 .padding(horizontal = 8.dp)
-                // ✅ AJUSTE: Removendo arredondamento
                 .clip(RoundedCornerShape(0.dp))
-                // ✅ AJUSTE: Removendo sombra
                 .shadow(elevation = 0.dp)
                 .background(MaterialTheme.colorScheme.background)
         ) {
@@ -121,13 +109,11 @@ fun AdminScreen(
                     .fillMaxSize()
                     .verticalScroll(scrollState)
             ) {
-                // 🚀 NOVO: Espaçamento de 30dp para a Status Bar
                 Spacer(modifier = Modifier.height(30.dp))
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        // ✅ AJUSTE: Padding vertical consistente (8.dp)
                         .padding(horizontal = 8.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -186,11 +172,10 @@ fun AdminScreen(
                 DiamondLine(modifier = Modifier.padding(bottom = 8.dp))
 
                 if (selectedScreen.value == AdminScreenType.Humor) {
-                    // CÓDIGO DA TELA DE HUMOR
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp), // Aplicando padding interno
+                            .padding(horizontal = 16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         SessionTitle(
@@ -264,8 +249,6 @@ fun AdminScreen(
                                 color = colorResource(id = R.color.primary)
                             )
                         }
-
-                        // --- Lista de Humores ---
                         SessionTitle(
                             text = "Humores Existentes (${(humorDataState as? HumorDataState.Success)?.data?.size ?: 0}/9)",
                             fontWeight = FontWeight.Bold,
@@ -297,14 +280,12 @@ fun AdminScreen(
                         }
                     }
                 } else {
-                    // CÓDIGO DA TELA DE APOIO (NOVO CONTEÚDO)
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp), // Aplicando padding interno
+                            .padding(horizontal = 16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Botões de Ação: Visualizar Votos / Adicionar Opção
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -313,7 +294,6 @@ fun AdminScreen(
                                 .padding(4.dp),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            // Botão de VISUALIZAR RELATÓRIO
                             Button(
                                 onClick = { showReport = true },
                                 modifier = Modifier.weight(1f),
@@ -327,8 +307,6 @@ fun AdminScreen(
                                     color = if (showReport) colorResource(id = R.color.bg_dark) else colorResource(id = R.color.primary)
                                 )
                             }
-
-                            // Botão de ADICIONAR NOVA OPÇÃO
                             Button(
                                 onClick = { showReport = false },
                                 modifier = Modifier.weight(1f),
@@ -347,7 +325,6 @@ fun AdminScreen(
                         Spacer(modifier = Modifier.height(24.dp))
 
                         if (showReport) {
-                            // --- VISUALIZAÇÃO DO RELATÓRIO (VOTOS) ---
                             SessionTitle(
                                 text = "Resultado da Votação de Apoio",
                                 fontWeight = FontWeight.Bold,
@@ -365,7 +342,6 @@ fun AdminScreen(
                                         Text(text = "Nenhuma atividade ou voto encontrado.", color = colorResource(id = R.color.light_blue))
                                     } else {
                                         Column(modifier = Modifier.fillMaxWidth()) {
-                                            // Ordena por contagem de votos (maior para o menor)
                                             state.report.sortedByDescending { it.voteCount }.forEach { reportItem ->
                                                 VoteReportListItem(
                                                     reportItem = reportItem,
@@ -384,7 +360,6 @@ fun AdminScreen(
                             }
 
                         } else {
-                            // --- ADICIONAR NOVA OPÇÃO (CRUD) ---
                             SessionTitle(
                                 text = "Adicionar Nova Opção de Apoio",
                                 fontWeight = FontWeight.Bold,
@@ -438,8 +413,6 @@ fun AdminScreen(
                                     color = colorResource(id = R.color.primary)
                                 )
                             }
-
-                            // Lista de opções existentes (sem a contagem de votos, para CRUD)
                             SessionTitle(
                                 text = "Opções Existentes",
                                 fontWeight = FontWeight.Bold,
@@ -453,7 +426,6 @@ fun AdminScreen(
                                 is ActivityDataState.Success -> {
                                     Column(modifier = Modifier.fillMaxWidth()) {
                                         state.activities.forEach { activity ->
-                                            // Usa o item de relatório, mas força a não exibir a contagem
                                             VoteReportListItem(
                                                 reportItem = ActivityVoteReportDTO(activity.id ?: "", activity.activity, 0),
                                                 showVoteCount = false,
@@ -464,19 +436,16 @@ fun AdminScreen(
                                         }
                                     }
                                 }
-                                else -> Unit // Não mostra nada para evitar mensagens duplicadas
+                                else -> Unit
                             }
                         }
                     }
                 }
-
-                // ✅ AJUSTE: Espaçamento inferior consistente (32dp)
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }
 
-    // --- DIÁLOGO DE ALERTA DE LIMITE (PERMANECE IGUAL) ---
     if (showLimitMessage) {
         AlertDialog(
             onDismissRequest = { showLimitMessage = false },
@@ -491,9 +460,6 @@ fun AdminScreen(
     }
 }
 
-// -------------------------------------------------------------------------
-// COMPONENTE: Item para Humor (Permanece igual)
-// -------------------------------------------------------------------------
 @Composable
 fun HumorListItem(humor: HumorData, onDelete: (String) -> Unit) {
     Row(
@@ -529,9 +495,6 @@ fun HumorListItem(humor: HumorData, onDelete: (String) -> Unit) {
     }
 }
 
-// -------------------------------------------------------------------------
-// COMPONENTE CORRIGIDO: Item para Relatório/CRUD de Atividades (Apoio)
-// -------------------------------------------------------------------------
 @Composable
 fun VoteReportListItem(reportItem: ActivityVoteReportDTO, showVoteCount: Boolean, onDelete: (String) -> Unit) {
     val showDialog = remember { mutableStateOf(false) }
@@ -545,17 +508,14 @@ fun VoteReportListItem(reportItem: ActivityVoteReportDTO, showVoteCount: Boolean
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        // Nome da Atividade (A CHAVE DA CORREÇÃO é o .weight(1f) aqui)
         Text(
             text = reportItem.activityName,
             color = colorResource(id = R.color.primary),
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(1f), // Ocupa todo o espaço restante
-            maxLines = 2, // Limita o número de linhas para evitar quebra de layout
-            overflow = TextOverflow.Ellipsis // Adiciona '...' se o texto for truncado
+            modifier = Modifier.weight(1f),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
         )
-
-        // Contagem de Votos (espaço fixo à direita)
         if (showVoteCount) {
             Spacer(modifier = Modifier.width(8.dp))
             Text(
@@ -565,8 +525,6 @@ fun VoteReportListItem(reportItem: ActivityVoteReportDTO, showVoteCount: Boolean
                 fontSize = 14.sp
             )
         }
-
-        // Ícone de Excluir (espaço fixo à direita)
         IconButton(onClick = {
             if (!reportItem.activityId.isNullOrBlank()) {
                 showDialog.value = true
@@ -580,7 +538,6 @@ fun VoteReportListItem(reportItem: ActivityVoteReportDTO, showVoteCount: Boolean
         }
     }
 
-    // Diálogo de confirmação de exclusão
     if (showDialog.value) {
         AlertDialog(
             onDismissRequest = { showDialog.value = false },

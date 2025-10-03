@@ -41,7 +41,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import br.com.fiap.softwell.R
-// Importações dos seus componentes e modelos
 import br.com.fiap.softwell.model.Communication
 import br.com.fiap.softwell.model.LeadershipRelation
 import br.com.fiap.softwell.model.RelationshipClimate
@@ -64,7 +63,6 @@ import kotlinx.coroutines.launch
 fun PsychosocialScreen(navController: NavController) {
     val scrollState = rememberScrollState()
 
-    // Inicializa o serviço de API
     val psychoSocialApiService = remember { RetrofitFactory.getPsychoSocialService() }
 
     val diagonalGradient = Brush.linearGradient(
@@ -77,7 +75,6 @@ fun PsychosocialScreen(navController: NavController) {
         end = Offset(1000f, 1000f)
     )
 
-    // --- ESTADOS DA TELA (MANTIDOS) ---
     var workloadAssessment by remember { mutableStateOf("") }
     var qualityOfLifeImpact by remember { mutableStateOf("") }
     var extraHours by remember { mutableStateOf("") }
@@ -103,16 +100,11 @@ fun PsychosocialScreen(navController: NavController) {
     var leaderRecognizesEfforts by rememberSaveable { mutableStateOf(3f) }
     var trustAndTransparency by rememberSaveable { mutableStateOf(3f) }
 
-    // --- FUNÇÃO DE ENVIO PARA O BACKEND E NAVEGAÇÃO ---
     fun handleSubmit() {
-        // Pega o userId REAL do token JWT salvo no AuthTokenManager.
         val userId = AuthTokenManager.getUserIdFromToken()
 
-        // Validação: Se o userId for nulo (token inválido ou não logado), interrompe o envio.
         if (userId == null) {
             Log.e("API_SUBMIT", "Usuário não autenticado. Impossível enviar dados.")
-            // Você pode opcionalmente mostrar uma mensagem para o usuário ou deslogá-lo.
-            // Ex: navController.navigate("login") { popUpTo(0) }
             return
         }
 
@@ -128,7 +120,6 @@ fun PsychosocialScreen(navController: NavController) {
             leaderRecognizesEfforts, trustAndTransparency
         )
 
-        // O psychosocialData agora é criado com o userId CORRETO.
         val psychosocialData = PsychoSocial(
             userId = userId,
             workload = workloadData,
@@ -140,16 +131,13 @@ fun PsychosocialScreen(navController: NavController) {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Tenta enviar para a API (I/O Thread)
                 val response = psychoSocialApiService.submitAnswers(psychosocialData)
 
                 if (response.isSuccessful) {
                     Log.i("API_SUBMIT", "Dados psicossociais enviados com sucesso! Navegando para dashboard.")
 
-                    // ✅ NAVEGAÇÃO: Mudar para o Dashboard na Main Thread
                     CoroutineScope(Dispatchers.Main).launch {
                         navController.navigate("dashboard") {
-                            // Limpa o stack para que o botão Voltar não retorne ao formulário
                             popUpTo("dashboard") {
                                 inclusive = true
                             }
@@ -166,18 +154,16 @@ fun PsychosocialScreen(navController: NavController) {
         }
     }
 
-    // --- UI (Conteúdo da tela) ---
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(diagonalGradient)
     ) {
-        // Box interno (Conteúdo Branco) - Layout de colagem vertical e espaçamento lateral
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 8.dp) // Espaçamento SOMENTE nas laterais
-                .clip(RoundedCornerShape(0.dp)) // Sem arredondamento
+                .padding(horizontal = 8.dp)
+                .clip(RoundedCornerShape(0.dp))
                 .shadow(
                     elevation = 0.dp
                 )
@@ -188,11 +174,7 @@ fun PsychosocialScreen(navController: NavController) {
                     .fillMaxSize()
                     .verticalScroll(scrollState)
             ) {
-
-                // 🚀 NOVO: Adiciona um espaçador para afastar o conteúdo da Status Bar
                 Spacer(modifier = Modifier.height(30.dp))
-
-                // Conteúdo do cabeçalho (seta de voltar)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -209,8 +191,6 @@ fun PsychosocialScreen(navController: NavController) {
                         tint = colorResource(id = R.color.light_green)
                     )
                 }
-
-                // --- Carga de Trabalho ---
                 SessionTitle(text = "Carga de Trabalho")
                 Question(text = "Como você avalia sua carga de trabalho?")
                 CustomDropdown(
@@ -234,8 +214,6 @@ fun PsychosocialScreen(navController: NavController) {
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
                 DiamondLine(modifier = Modifier.padding(vertical = 8.dp))
-
-                // --- Sinais de Alerta ---
                 SessionTitle(text = "Sinais de Alerta")
                 Question(text = "Você tem apresentado sintomas como insônia, irritabilidade ou cansaço extremo?")
                 CustomDropdown(
@@ -252,8 +230,6 @@ fun PsychosocialScreen(navController: NavController) {
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
                 DiamondLine(modifier = Modifier.padding(vertical = 8.dp))
-
-                // --- Clima - Relacionamento ---
                 SessionTitle(text = "Clima - Relacionamento")
                 SessionTitle(text = "(Sendo 01 - ruim e 05 - Ótimo)")
                 Question(text = "Como está o seu relacionamento com seu chefe numa escala de 1 a 5?")
@@ -313,8 +289,6 @@ fun PsychosocialScreen(navController: NavController) {
                         .padding(bottom = 16.dp)
                 )
                 DiamondLine(modifier = Modifier.padding(vertical = 8.dp))
-
-                // --- Comunicação ---
                 SessionTitle(text = "Comunicação")
                 SessionTitle(text = "(Sendo 01 - ruim e 05 - Ótimo)")
                 Question(text = "Recebo orientações claras e objetivas sobre minhas atividades e responsabilidades.")
@@ -339,8 +313,6 @@ fun PsychosocialScreen(navController: NavController) {
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
                 DiamondLine(modifier = Modifier.padding(vertical = 8.dp))
-
-                // --- Relação com a Liderança ---
                 SessionTitle(text = "Relação com a Liderança")
                 SessionTitle(text = "(Sendo 01 - ruim e 05 - Ótimo)")
                 Question(text = "Minha liderança demonstra interesse pelo meu bem-estar no trabalho.")
@@ -369,10 +341,8 @@ fun PsychosocialScreen(navController: NavController) {
                     onValueChange = { trustAndTransparency = it },
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
-
-                // Botão ENVIAR
                 Button(
-                    onClick = { handleSubmit() }, // Chama a função que envia e navega
+                    onClick = { handleSubmit() },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp)
@@ -387,8 +357,6 @@ fun PsychosocialScreen(navController: NavController) {
                         fontSize = 18.sp
                     )
                 }
-
-                // ESPAÇAMENTO INFERIOR MAIOR (Layout mantido)
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }

@@ -15,10 +15,8 @@ import br.com.fiap.softwell.screens.PsychosocialScreen
 import br.com.fiap.softwell.screens.SupportScreen
 import br.com.fiap.softwell.ui.theme.SoftwellTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
-//import br.com.fiap.softwell.model.MoodViewModel
 import br.com.fiap.softwell.model.ThemeViewModel
 import br.com.fiap.softwell.screens.AdminScreen
-
 import br.com.fiap.softwell.screens.HistoricScreen
 import br.com.fiap.softwell.screens.RegisterScreen
 import br.com.fiap.softwell.service.RetrofitFactory
@@ -30,8 +28,7 @@ class MainActivity : ComponentActivity() {
         val activityApiService = RetrofitFactory.getActivityService()
 
         setContent {
-
-            val themeViewModel: ThemeViewModel = viewModel() // ViewModel para controlar o tema
+            val themeViewModel: ThemeViewModel = viewModel()
 
             SoftwellTheme(darkTheme = themeViewModel.isDarkTheme.value) {
                 Surface(modifier = Modifier.fillMaxSize()) {
@@ -45,7 +42,6 @@ class MainActivity : ComponentActivity() {
                         composable(route = "support") {
                             SupportScreen(navController, activityApiService)
                         }
-
                         composable(route = "historic") { HistoricScreen(navController) }
                         composable("adminHumorScreen") { AdminScreen(navController) }
                     }

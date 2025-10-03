@@ -68,28 +68,22 @@ fun SupportScreen(
     navController: NavController,
     apiService: ActivityApiService
 ) {
-    // 1. Inicializa o ViewModel
     val viewModel: UserActivityViewModel = viewModel(
         factory = UserActivityViewModelFactory(apiService)
     )
-
-    // 2. Observa os estados
     val state = viewModel.activityState.collectAsState().value
     val voteFeedbackState by viewModel.voteFeedbackState.collectAsState()
 
-    // Estados locais para UI
     val selectedScreen = remember { mutableStateOf(SupportScreenType.Care) }
     val selectedActivityId = remember { mutableStateOf<String?>(null) }
     val showVoteFeedbackDialog = remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
 
-    // 3. Efeito para carregar as atividades
     LaunchedEffect(Unit) {
         viewModel.fetchActivities()
     }
 
-    // 4. Efeito para exibir o Diálogo de Feedback
     LaunchedEffect(voteFeedbackState) {
         when (voteFeedbackState) {
             is VoteFeedbackState.VotedSuccessfully,
@@ -101,7 +95,6 @@ fun SupportScreen(
         }
     }
 
-    // Definição do diagonalGradient
     val diagonalGradient = Brush.linearGradient(
         colors = listOf(
             colorResource(id = R.color.bg_dark),
@@ -111,7 +104,6 @@ fun SupportScreen(
         start = Offset(0f, 0f),
         end = Offset(1000f, 1000f)
     )
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -120,24 +112,19 @@ fun SupportScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                // ✅ CORREÇÃO 1: Remover o padding vertical e manter apenas o horizontal
                 .padding(horizontal = 8.dp)
-                .clip(RoundedCornerShape(0.dp)) // ✅ CORREÇÃO 2: Remover o arredondamento
-                .shadow(elevation = 0.dp) // ✅ CORREÇÃO 3: Remover a sombra
+                .clip(RoundedCornerShape(0.dp))
+                .shadow(elevation = 0.dp)
                 .background(MaterialTheme.colorScheme.background)
         ) {
             Column(
                 modifier = Modifier
                     .verticalScroll(scrollState)
             ) {
-                // 🚀 NOVO: Adiciona um espaçador para afastar o conteúdo da Status Bar (30dp)
                 Spacer(modifier = Modifier.height(30.dp))
-
-                // Cabeçalho com botão de voltar e toggle
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        // ✅ AJUSTE: Mudar padding vertical para 8.dp para ser consistente com PsychosocialScreen
                         .padding(horizontal = 8.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -200,8 +187,6 @@ fun SupportScreen(
                     )
                 }
                 Spacer(modifier = Modifier.height(24.dp))
-
-                // Bloco de Conteúdo da Votação (SupportScreenType.Care)
                 if (selectedScreen.value == SupportScreenType.Care) {
                     when (state) {
                         is UserActivityState.Loading -> {
@@ -211,13 +196,12 @@ fun SupportScreen(
                             Text("Falha ao carregar as atividades. Verifique o servidor.", color = colorResource(id = R.color.black), modifier = Modifier.padding(16.dp))
                         }
                         is UserActivityState.Success -> {
-                            // Renderiza a lista de atividades do backend
                             state.activities.forEach { activity ->
                                 Card(
                                     modifier = Modifier
                                         .padding(vertical = 4.dp, horizontal = 16.dp)
                                         .fillMaxWidth()
-                                        .clickable { selectedActivityId.value = activity.id } // Armazena o ID
+                                        .clickable { selectedActivityId.value = activity.id }
                                         .border(
                                             width = if (selectedActivityId.value == activity.id) 2.dp else 1.dp,
                                             color = if (selectedActivityId.value == activity.id) colorResource(id = R.color.light_blue)
@@ -231,7 +215,7 @@ fun SupportScreen(
                                     elevation = CardDefaults.cardElevation(4.dp)
                                 ) {
                                     Text(
-                                        text = activity.activity, // Usa o campo 'activity' do modelo
+                                        text = activity.activity,
                                         modifier = Modifier.padding(16.dp),
                                         fontSize = 16.sp,
                                         fontWeight = if (selectedActivityId.value == activity.id) FontWeight.Bold else FontWeight.Normal,
@@ -245,12 +229,10 @@ fun SupportScreen(
                             }
                         }
                     }
-
-                    // Botão VOTAR
                     Button(
                         onClick = {
                             selectedActivityId.value?.let { id ->
-                                viewModel.registrarVoto(id) // Chama a função de voto do ViewModel
+                                viewModel.registrarVoto(id)
                             }
                         },
                         modifier = Modifier
@@ -268,8 +250,6 @@ fun SupportScreen(
                             color = colorResource(id = R.color.primary)
                         )
                     }
-
-                    // Informações adicionais
                     Text(
                         text = "Sua votação é anônima.",
                         fontSize = 14.sp,
@@ -303,7 +283,6 @@ fun SupportScreen(
                         }
                     }
                 } else {
-                    // Lógica para Orientações (Guidelines)
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -315,14 +294,11 @@ fun SupportScreen(
                         }
                     }
                 }
-
-                // ✅ AJUSTE: Manter o espaçamento inferior grande (32dp)
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }
 
-    // --- DIÁLOGO DE FEEDBACK (NOVO) ---
     if (showVoteFeedbackDialog.value) {
         val feedback = voteFeedbackState
         val title: String
@@ -335,7 +311,6 @@ fun SupportScreen(
             }
             is VoteFeedbackState.VoteLimitReached -> {
                 title = "Limite de Votação Atingido"
-                // Usa a mensagem exata do backend (dias e horas restantes)
                 message = feedback.message
             }
             is VoteFeedbackState.Error -> {

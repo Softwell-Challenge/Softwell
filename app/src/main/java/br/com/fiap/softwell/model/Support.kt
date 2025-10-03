@@ -2,8 +2,6 @@ package br.com.fiap.softwell.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.sql.Timestamp
-import java.util.Date
 
 @Entity(tableName = "support")
 data class Support(

@@ -2,7 +2,6 @@ package br.com.fiap.softwell.model
 
 import com.google.gson.annotations.SerializedName
 
-// Corresponde ao HumorRequestDTO do seu backend
 data class HumorRequest(
     @SerializedName("userId")
     val userId: String,

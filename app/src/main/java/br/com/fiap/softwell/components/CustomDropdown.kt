@@ -8,11 +8,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import br.com.fiap.softwell.R
 import br.com.fiap.softwell.ui.theme.Sora
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,8 +41,6 @@ fun CustomDropdown(
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp, vertical = 2.dp),
             colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
-                //textColor = colorResource(id = R.color.primary),
-                //containerColor = colorResource(id = R.color.bg_dark),
                 focusedBorderColor = Color.Transparent,
                 unfocusedBorderColor = Color.Transparent
             ),
