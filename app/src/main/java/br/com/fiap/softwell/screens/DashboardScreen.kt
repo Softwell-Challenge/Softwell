@@ -229,8 +229,6 @@ fun DashboardScreen(navController: NavController, themeViewModel: ThemeViewModel
                 Column(modifier = Modifier.padding(horizontal = 8.dp)) {
                     DashboardCard("Avaliação Psicossocial", "psychosocial", navController)
                     DashboardCard("Recursos de Apoio", "support", navController)
-                    DashboardCard("Gráficos Pessoais", "graphic", navController)
-
                     if (isAdmin) {
                         DashboardCard("Histórico de Respostas", "historic", navController)
                     }
